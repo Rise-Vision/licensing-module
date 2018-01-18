@@ -1,0 +1,9 @@
+node_modules/
+build-temp/
+src/test/test-results.xml
+private-keys/
+build/
+coverage/
+test/test-results.xml
+*.zip
+npm-debug.log
