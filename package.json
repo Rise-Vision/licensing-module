@@ -38,7 +38,6 @@
   },
   "dependencies": {
     "common-display-module": "git://github.com/Rise-Vision/common-display-module.git#v2.5.0",
-    "node-ipc": "^9.1.1",
     "rise-common-electron": "git+https://github.com/Rise-Vision/rise-common-electron.git#v2.2.5"
   }
 }
