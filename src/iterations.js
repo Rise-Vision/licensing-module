@@ -1,4 +1,4 @@
-/* eslint-disable no-magic-numbers, line-comment-position, no-inline-comments */
+/* eslint-disable no-magic-numbers, line-comment-position, no-inline-comments, function-paren-newline */
 
 // Iteration loop, separated to facilitate integration tests
 
@@ -17,11 +17,10 @@ function ensureLicensingLoopIsRunning(schedule = setInterval) {
   if (!timerId) {
     return subscriptions.loadData()
     .then(() => programLicensingDataUpdate(schedule, EACH_DAY))
-    .catch(error => {
-      logger.logSubscriptionAPICallError(error);
-
-      programLicensingDataLoadingRetries(schedule);
-    });
+    .catch(error =>
+      logger.logSubscriptionAPICallError(error, true)
+      .then(() => programLicensingDataLoadingRetries(schedule))
+    );
   }
 }
 
@@ -51,10 +50,10 @@ function retryLicensingDataLoad(schedule) {
   return subscriptions.loadData()
   .then(() => programLicensingDataUpdate(schedule, EACH_DAY)) // switch to normal reporting
   .catch(error => {
-    // log the error locally, as this is a retry
-    logger.logSubscriptionAPICallError(error, false);
-
     retryCounts += 1;
+
+    // log the error locally, as this is a retry
+    return logger.logSubscriptionAPICallError(error, false);
   });
 }
 
