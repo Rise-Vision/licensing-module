@@ -2,6 +2,8 @@ const common = require("common-display-module");
 
 const moduleName = "licensing";
 
+let companyId = null;
+
 module.exports = {
   bqProjectName: "client-side-events",
   bqDataset: "Module_Events",
@@ -11,5 +13,11 @@ module.exports = {
   moduleName,
   getModuleVersion() {
     return common.getModuleVersion(moduleName)
+  },
+  getCompanyId() {
+    return companyId;
+  },
+  setCompanyId(id) {
+    companyId = id;
   }
 };
