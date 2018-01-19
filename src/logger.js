@@ -2,7 +2,7 @@
 const common = require("common-display-module");
 const {
   bqProjectName, bqDataset, bqTable, failedEntryFile, logFolder,
-  moduleName, getModuleVersion
+  moduleName, getModuleVersion, getSubscriptStatusApiUrl
 } = require("./config");
 
 const externalLogger = require("common-display-module/external-logger")(bqProjectName, bqDataset, failedEntryFile);
@@ -34,10 +34,21 @@ function external(eventType, eventDetails, data = {}) {
   .then(detail => logger.external(eventType, detail, bqTable));
 }
 
+function logSubscriptionAPICallError(err, remote = true) {
+  const detail = err.stack;
+  const url = getSubscriptStatusApiUrl();
+  const userFriendlyMessage = `Subscription Status API Call failed: ${url}`;
+
+  const call = remote ? error : logger.file;
+
+  return call(detail, userFriendlyMessage);
+}
+
 module.exports = {
   file: logger.file,
   debug: logger.debug,
   error,
   external,
-  all
+  all,
+  logSubscriptionAPICallError
 };
