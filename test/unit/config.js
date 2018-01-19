@@ -12,14 +12,14 @@ describe("Config - Unit", ()=>
   it("Construct Subscription API URL", () => {
     config.setCompanyId('123');
 
-    const url = config.getSubscriptStatusApiUrl();
+    const url = config.getSubscriptionStatusApiUrl();
 
     assert.equal(url, 'https://store-dot-rvaserver2.appspot.com/v1/company/123/product/status?pc=c4b368be86245bf9501baaa6e0b00df9719869fd');
   });
 
   it("Fail on creating Subscription API URL if company id is not set", () => {
     try {
-      config.getSubscriptStatusApiUrl();
+      config.getSubscriptionStatusApiUrl();
 
       assert.fail();
     }

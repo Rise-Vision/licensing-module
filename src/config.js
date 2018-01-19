@@ -10,7 +10,7 @@ const PRODUCT_CODES = [
 
 let companyId = null;
 
-function getSubscriptStatusApiUrl() {
+function getSubscriptionStatusApiUrl() {
   if (!companyId) {
     throw Error("Company ID not set");
   }
@@ -34,5 +34,5 @@ module.exports = {
   setCompanyId(id) {
     companyId = id;
   },
-  getSubscriptStatusApiUrl
+  getSubscriptionStatusApiUrl
 };
