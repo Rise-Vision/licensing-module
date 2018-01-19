@@ -41,14 +41,19 @@ function programLicensingDataLoadingRetries(schedule) {
 
       timerId = schedule(() => retryLicensingDataLoad(schedule), EACH_HOUR);
     } else {
-      retryLicensingDataLoad(schedule);
+      return retryLicensingDataLoad(schedule);
     }
   }, EACH_5_MINUTES);
 }
 
 function retryLicensingDataLoad(schedule) {
   return subscriptions.loadData()
-  .then(() => programLicensingDataUpdate(schedule, EACH_DAY)) // switch to normal reporting
+  .then(() => {
+    logger.all('api_call_successful_retry');
+
+    // switch to normal reporting
+    programLicensingDataUpdate(schedule, EACH_DAY)
+  })
   .catch(error => {
     retryCounts += 1;
 
