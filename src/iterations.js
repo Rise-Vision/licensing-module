@@ -1,4 +1,4 @@
-/* eslint-disable no-magic-numbers */
+/* eslint-disable no-magic-numbers, line-comment-position, no-inline-comments */
 
 // Iteration loop, separated to facilitate integration tests
 
@@ -13,20 +13,10 @@ const EACH_DAY = 24 * EACH_HOUR;
 let timerId = null;
 let retryCounts = 0;
 
-function sendSubscriptionsData(data) {
-  // broadcast to be implemented in the next card
-
-  return Promise.resolve(data);
-}
-
 function ensureLicensingLoopIsRunning(schedule = setInterval) {
   if (!timerId) {
     return subscriptions.loadData()
-    .then(data => {
-      sendSubscriptionsData(data);
-
-      programLicensingDataUpdate(schedule, EACH_DAY);
-    })
+    .then(() => programLicensingDataUpdate(schedule, EACH_DAY))
     .catch(error => {
       logger.logSubscriptionAPICallError(error);
 
@@ -39,8 +29,7 @@ function programLicensingDataUpdate(schedule, interval) {
   stop();
 
   timerId = schedule(() => {
-    subscriptions.loadData()
-    .then(sendSubscriptionsData)
+    return subscriptions.loadData()
     .catch(logger.logSubscriptionAPICallError);
   }, interval);
 }
@@ -60,13 +49,9 @@ function programLicensingDataLoadingRetries(schedule) {
 
 function retryLicensingDataLoad(schedule) {
   return subscriptions.loadData()
-  .then(data => {
-    sendSubscriptionsData(data);
-
-    // now change to normal update reporting
-    programLicensingDataUpdate(schedule, EACH_DAY);
-  })
+  .then(() => programLicensingDataUpdate(schedule, EACH_DAY)) // switch to normal reporting
   .catch(error => {
+    // log the error locally, as this is a retry
     logger.logSubscriptionAPICallError(error, false);
 
     retryCounts += 1;
@@ -82,4 +67,4 @@ function stop() {
   }
 }
 
-module.exports = {ensureLicensingLoopIsRunning, sendSubscriptionsData, stop};
+module.exports = {ensureLicensingLoopIsRunning, stop};

@@ -1,7 +1,13 @@
+function broadcast(data) {
+  // Implement broadcast to other modules here; next card
+  return data;
+}
+
 function loadData() {
   // load web service data here.
 
-  return Promise.resolve();
+  return Promise.resolve()
+  .then(broadcast);
 }
 
-module.exports = {loadData};
+module.exports = {broadcast, loadData};
