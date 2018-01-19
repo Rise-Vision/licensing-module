@@ -39,7 +39,7 @@ function logSubscriptionAPICallError(err, remote = true) {
   const url = getSubscriptStatusApiUrl();
   const userFriendlyMessage = `Subscription Status API Call failed: ${url}`;
 
-  const call = remote ? error : logger.file;
+  const call = remote ? error : module.exports.file;
 
   return call(detail, userFriendlyMessage);
 }
