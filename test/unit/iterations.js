@@ -88,11 +88,12 @@ describe("Iterations - Unit", ()=>
     });
   });
 
-  it("should retry until subscription API gives a first answer", done => {
+  it("should retry until subscription API gives a successful answer", done => {
     let loadCounter = 0;
     let state = 0;
 
     simple.mock(subscriptions, "loadData").callFn(() => {
+      // reject the first 25 requests
       if (loadCounter < 25) {
         loadCounter += 1;
 

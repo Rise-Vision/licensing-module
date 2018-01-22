@@ -1,13 +1,16 @@
-function broadcast(data) {
-  // Implement broadcast to other modules here; next card
-  return data;
-}
+const store = require("./store");
+
+let currentSubscriptionStatusTable = null;
 
 function loadData() {
-  // load web service data here.
+  // Currently the subscription status come only from store, but in future modules it may also come from the display's GCS bucket.
+  return store.getSubscriptionStatusTable()
+  .then(table => {
+    currentSubscriptionStatusTable = table;
 
-  return Promise.resolve()
-  .then(broadcast);
+    // Implement broadcast to other modules here; next card
+    return currentSubscriptionStatusTable;
+  })
 }
 
-module.exports = {broadcast, loadData};
+module.exports = {loadData};

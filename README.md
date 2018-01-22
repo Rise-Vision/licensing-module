@@ -48,6 +48,23 @@ node src/index.js
 
 As a result, in the remote BigQuery table an 'started' event will be appended.
 
+### Subscription Status API Test Client
+
+A simple Subscription Status API client is provided:
+
+```bash
+node src/test/manual/request.js COMPANY-ID
+```
+
+Where COMPANY-ID is a valid company id for which configured subscriptions
+are checked.
+
+To test with a proxy, add an HTTPS_PROXY environment variable:
+
+```bash
+HTTPS_PROXY=http://localhost:8888 node test/manual/request.js
+```
+
 ### Building
 
 ```bash
