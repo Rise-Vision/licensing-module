@@ -1,4 +1,7 @@
 /* eslint-disable function-paren-new, function-paren-newline */
+const common = require("common-display-module");
+
+const config = require("./config");
 const store = require("./store");
 
 let currentSubscriptionStatusTable = {};
@@ -13,6 +16,16 @@ function isSubscriptionDataChanged(current, updated) {
     );
 }
 
+function broadcastSubscriptionData() {
+  const message = {
+    from: config.moduleName,
+    topic: "licensing-update",
+    subscriptions: currentSubscriptionStatusTable
+  };
+
+  common.broadcastMessage(message);
+}
+
 function loadDataAndBroadcast() {
   // Currently the subscription status come only from store, but in future modules it may also come from the display's GCS bucket.
   return store.getSubscriptionStatusTable()
@@ -21,9 +34,13 @@ function loadDataAndBroadcast() {
 
     currentSubscriptionStatusTable = updatedSubscriptionStatusTable;
 
-    // Implement broadcast to other modules here; next card
-    return changed;
+    return changed && broadcastSubscriptionData();
   })
 }
 
-module.exports = {isSubscriptionDataChanged, loadDataAndBroadcast};
+// For testing purposes only
+function clear() {
+  currentSubscriptionStatusTable = {};
+}
+
+module.exports = {isSubscriptionDataChanged, loadDataAndBroadcast, clear};
