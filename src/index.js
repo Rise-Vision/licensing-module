@@ -27,7 +27,8 @@ function run(schedule = setInterval) {
     common.getClientList(config.moduleName);
 
     return logger.all("started");
-  });
+  })
+  .catch(error => logger.file(error.stack, 'Could not connect'));
 }
 
 if (process.env.NODE_ENV !== "test") {

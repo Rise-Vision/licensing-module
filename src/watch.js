@@ -22,6 +22,9 @@ function startWatchIfLocalStorageModuleIsAvailable(message) {
     if (clients.includes("local-storage")) {
       return sendWatchMessage()
       .then(() => watchMessageAlreadySent = true)
+      .catch(error =>
+        logger.file(error.stack, 'Error while sending watch message')
+      )
     }
   }
 
@@ -42,6 +45,7 @@ function sendWatchMessage() {
 function loadCompanyIdFromContent(data, schedule) {
   const json = JSON.parse(data);
 
+  // Note that if the display doesn't have a schedule assigned, licensing data won't be avaiable.
   if (json.content && json.content.schedule && json.content.schedule.companyId) {
     const companyId = json.content.schedule.companyId;
 
@@ -71,6 +75,9 @@ function receiveContentFile(message, schedule = setInterval) {
         logger.error(error.stack, `Could not parse content file ${path}`);
       }
     })
+    .catch(error =>
+      logger.file(error.stack, `Could not read content file ${path}`)
+    )
   }
 }
 

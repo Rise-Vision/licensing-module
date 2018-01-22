@@ -3,6 +3,7 @@ const common = require("common-display-module");
 
 const config = require("./config");
 const store = require("./store");
+const logger = require("./logger");
 
 let currentSubscriptionStatusTable = {};
 
@@ -27,6 +28,8 @@ function broadcastSubscriptionData() {
 }
 
 function loadDataAndBroadcast() {
+  logger.debug("loading subscription data");
+
   // Currently the subscription status come only from store, but in future modules it may also come from the display's GCS bucket.
   return store.getSubscriptionStatusTable()
   .then(updatedSubscriptionStatusTable => {

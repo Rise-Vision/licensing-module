@@ -47,6 +47,8 @@ node src/index.js
 ```
 
 As a result, in the remote BigQuery table an 'started' event will be appended.
+Also, licensing events will appear on the local-messaging-module screen as
+licensing data is retrieved and broadcasted.
 
 ### Subscription Status API Test Client
 
