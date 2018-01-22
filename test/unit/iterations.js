@@ -31,15 +31,15 @@ describe("Iterations - Unit", ()=>
   });
 
   it("should program updates if service call succeeds", done => {
-    simple.mock(subscriptions, "loadData").resolveWith();
+    simple.mock(subscriptions, "loadDataAndBroadcast").resolveWith();
 
     iterations.ensureLicensingLoopIsRunning((action, interval) => {
       assert.equal(interval, ONE_DAY);
-      assert(subscriptions.loadData.callCount, 1);
+      assert(subscriptions.loadDataAndBroadcast.callCount, 1);
 
       action()
       .then(() => {
-        assert(subscriptions.loadData.callCount, 2);
+        assert(subscriptions.loadDataAndBroadcast.callCount, 2);
 
         done();
       });
@@ -50,7 +50,7 @@ describe("Iterations - Unit", ()=>
     let loadCounter = 0;
     let state = 0;
 
-    simple.mock(subscriptions, "loadData").callFn(() => {
+    simple.mock(subscriptions, "loadDataAndBroadcast").callFn(() => {
       if (loadCounter === 0) {
         loadCounter += 1;
 
@@ -65,7 +65,7 @@ describe("Iterations - Unit", ()=>
         state = 1;
 
         assert.equal(interval, FIVE_MINUTES);
-        assert(subscriptions.loadData.callCount, 1);
+        assert(subscriptions.loadDataAndBroadcast.callCount, 1);
 
         assert(logger.logSubscriptionAPICallError.called);
         assert.equal(logger.logSubscriptionAPICallError.callCount, 1);
@@ -78,7 +78,7 @@ describe("Iterations - Unit", ()=>
         action();
       } else {
         assert.equal(interval, ONE_DAY);
-        assert(subscriptions.loadData.callCount, 2);
+        assert(subscriptions.loadDataAndBroadcast.callCount, 2);
 
         // error did not repeat
         assert.equal(logger.logSubscriptionAPICallError.callCount, 1);
@@ -92,7 +92,7 @@ describe("Iterations - Unit", ()=>
     let loadCounter = 0;
     let state = 0;
 
-    simple.mock(subscriptions, "loadData").callFn(() => {
+    simple.mock(subscriptions, "loadDataAndBroadcast").callFn(() => {
       // reject the first 25 requests
       if (loadCounter < 25) {
         loadCounter += 1;
@@ -108,7 +108,7 @@ describe("Iterations - Unit", ()=>
         state = 1;
 
         assert.equal(interval, FIVE_MINUTES);
-        assert(subscriptions.loadData.callCount, 1);
+        assert(subscriptions.loadDataAndBroadcast.callCount, 1);
 
         assert(logger.logSubscriptionAPICallError.called);
         assert.equal(logger.logSubscriptionAPICallError.callCount, 1);
@@ -125,7 +125,7 @@ describe("Iterations - Unit", ()=>
         state = 2;
 
         assert.equal(interval, ONE_HOUR);
-        assert(subscriptions.loadData.callCount, 12);
+        assert(subscriptions.loadDataAndBroadcast.callCount, 12);
         assert.equal(logger.all.called, false);
 
         assert(logger.logSubscriptionAPICallError.called);
@@ -142,7 +142,7 @@ describe("Iterations - Unit", ()=>
       } else {
         // it finally answered !
         assert.equal(interval, ONE_DAY);
-        assert(subscriptions.loadData.callCount, 25);
+        assert(subscriptions.loadDataAndBroadcast.callCount, 25);
 
         assert.equal(logger.logSubscriptionAPICallError.callCount, 25);
 

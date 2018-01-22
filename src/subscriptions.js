@@ -13,7 +13,7 @@ function isSubscriptionDataChanged(current, updated) {
     );
 }
 
-function loadData() {
+function loadDataAndBroadcast() {
   // Currently the subscription status come only from store, but in future modules it may also come from the display's GCS bucket.
   return store.getSubscriptionStatusTable()
   .then(updatedSubscriptionStatusTable => {
@@ -26,4 +26,4 @@ function loadData() {
   })
 }
 
-module.exports = {isSubscriptionDataChanged, loadData};
+module.exports = {isSubscriptionDataChanged, loadDataAndBroadcast};

@@ -15,7 +15,7 @@ let retryCounts = 0;
 
 function ensureLicensingLoopIsRunning(schedule = setInterval) {
   if (!timerId) {
-    return subscriptions.loadData()
+    return subscriptions.loadDataAndBroadcast()
     .then(() => programLicensingDataUpdate(schedule, EACH_DAY))
     .catch(error =>
       logger.logSubscriptionAPICallError(error, true)
@@ -28,7 +28,7 @@ function programLicensingDataUpdate(schedule, interval) {
   stop();
 
   timerId = schedule(() => {
-    return subscriptions.loadData()
+    return subscriptions.loadDataAndBroadcast()
     .catch(logger.logSubscriptionAPICallError);
   }, interval);
 }
@@ -47,7 +47,7 @@ function programLicensingDataLoadingRetries(schedule) {
 }
 
 function retryLicensingDataLoad(schedule) {
-  return subscriptions.loadData()
+  return subscriptions.loadDataAndBroadcast()
   .then(() => {
     logger.all('api_call_successful_retry');
 
