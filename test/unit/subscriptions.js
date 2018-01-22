@@ -177,7 +177,7 @@ describe("Subscriptions - Unit", ()=>
       return subscriptions.loadDataAndBroadcast();
     })
     .then(() => {
-      // no further change in active flags even if timestamps changes, no broadcast then
+      // no further change in active flags even if timestamps change, no broadcast then
       assert.equal(common.broadcastMessage.callCount, 2);
     })
   });

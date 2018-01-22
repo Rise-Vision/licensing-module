@@ -8,6 +8,6 @@ const companyId = process.argv.length > 2 ?
 
 config.setCompanyId(companyId);
 
-store.getSubscriptionStatusTable()
-.then(console.log)
+store.fetchSubscriptionStatus()
+.then(request => console.log(request.body))
 .catch(console.error);
