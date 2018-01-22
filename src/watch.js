@@ -39,7 +39,7 @@ function sendWatchMessage() {
   );
 }
 
-function loadCompanyIdFromContent(data) {
+function loadCompanyIdFromContent(data, schedule) {
   const json = JSON.parse(data);
 
   if (json.content && json.content.schedule && json.content.schedule.companyId) {
@@ -48,14 +48,14 @@ function loadCompanyIdFromContent(data) {
     logger.file(`Setting company id as ${companyId}`);
     config.setCompanyId(companyId);
 
-    iterations.ensureLicensingLoopIsRunning();
+    iterations.ensureLicensingLoopIsRunning(schedule);
   }
   else {
     logger.error(`Company id could not be retrieved from content: ${data}`);
   }
 }
 
-function receiveContentFile(message) {
+function receiveContentFile(message, schedule = setInterval) {
   if (["DELETED", "NOEXIST"].includes(message.status)) {
     return;
   }
@@ -66,7 +66,7 @@ function receiveContentFile(message) {
     return platform.readTextFile(path)
     .then(data => {
       try {
-        loadCompanyIdFromContent(data);
+        loadCompanyIdFromContent(data, schedule);
       } catch (error) {
         logger.error(error.stack, `Could not parse content file ${path}`);
       }

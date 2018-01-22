@@ -7,7 +7,7 @@ const watch = require("./watch");
 
 const displayConfigBucket = "risevision-display-notifications";
 
-function run() {
+function run(schedule = setInterval) {
   common.receiveMessages(config.moduleName).then(receiver => {
     receiver.on("message", message => {
       switch (message.topic.toUpperCase()) {
@@ -19,7 +19,7 @@ function run() {
           }
 
           if (message.filePath.endsWith("/content.json")) {
-            return watch.receiveContentFile(message);
+            return watch.receiveContentFile(message, schedule);
           }
       }
     });
