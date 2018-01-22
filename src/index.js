@@ -12,7 +12,7 @@ function run() {
     receiver.on("message", message => {
       switch (message.topic.toUpperCase()) {
         case "CLIENT-LIST":
-          return watch.checkIfLocalStorageIsAvailable(message);
+          return watch.startWatchIfLocalStorageModuleIsAvailable(message);
         case "FILE-UPDATE":
           if (!message.filePath || !message.filePath.startsWith(displayConfigBucket)) {
             return;

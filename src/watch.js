@@ -13,7 +13,7 @@ function clearMessageAlreadySentFlag() {
   watchMessageAlreadySent = false;
 }
 
-function checkIfLocalStorageIsAvailable(message) {
+function startWatchIfLocalStorageModuleIsAvailable(message) {
   if (!watchMessageAlreadySent) {
     logger.debug(JSON.stringify(message));
 
@@ -75,7 +75,7 @@ function receiveContentFile(message) {
 }
 
 module.exports = {
-  checkIfLocalStorageIsAvailable,
+  startWatchIfLocalStorageModuleIsAvailable,
   clearMessageAlreadySentFlag,
   receiveContentFile
 };
