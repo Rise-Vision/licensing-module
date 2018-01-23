@@ -135,9 +135,13 @@ describe("Licensing - Integration", ()=>
   });
 
   it("should start iterations and broadcast licensing events", done => {
+    let eventHandler = null;
+
     function Receiver() {
       this.on = (type, handler) =>
       {
+        eventHandler = handler;
+
         handler({
           topic: "client-list",
           clients: ["logging", "system-metrics", "local-storage"]
@@ -235,6 +239,29 @@ describe("Licensing - Integration", ()=>
       .then(() => {
         // no more broadcasts
         assert(common.broadcastMessage.callCount, 2);
+
+        return eventHandler({topic: "licensing-request"});
+      })
+      .then(() => {
+        // forced broadcast, same event as current.
+        assert(common.broadcastMessage.callCount, 3);
+
+        const event = common.broadcastMessage.lastCall.args[0];
+
+        // I sent the event
+        assert.equal(event.from, "licensing");
+        // it's a log event
+        assert.equal(event.topic, "licensing-update");
+
+        assert(event.subscriptions);
+
+        const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
+        assert(rpp);
+        assert(rpp.active);
+
+        const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
+        assert(storage);
+        assert(storage.active);
 
         done();
       })

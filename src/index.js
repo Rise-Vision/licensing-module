@@ -3,6 +3,7 @@
 const common = require("common-display-module");
 const config = require("./config");
 const logger = require("./logger");
+const subscriptions = require("./subscriptions");
 const watch = require("./watch");
 
 const displayConfigBucket = "risevision-display-notifications";
@@ -13,6 +14,8 @@ function run(schedule = setInterval) {
       switch (message.topic.toUpperCase()) {
         case "CLIENT-LIST":
           return watch.startWatchIfLocalStorageModuleIsAvailable(message);
+        case "LICENSING-REQUEST":
+          return subscriptions.broadcastSubscriptionData();
         case "FILE-UPDATE":
           if (!message.filePath || !message.filePath.startsWith(displayConfigBucket)) {
             return;
