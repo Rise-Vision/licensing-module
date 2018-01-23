@@ -13,7 +13,7 @@ function clearMessageAlreadySentFlag() {
   watchMessageAlreadySent = false;
 }
 
-function checkIfLocalStorageIsAvailable(message) {
+function startWatchIfLocalStorageModuleIsAvailable(message) {
   if (!watchMessageAlreadySent) {
     logger.debug(JSON.stringify(message));
 
@@ -22,6 +22,9 @@ function checkIfLocalStorageIsAvailable(message) {
     if (clients.includes("local-storage")) {
       return sendWatchMessage()
       .then(() => watchMessageAlreadySent = true)
+      .catch(error =>
+        logger.file(error.stack, 'Error while sending watch message')
+      )
     }
   }
 
@@ -39,23 +42,24 @@ function sendWatchMessage() {
   );
 }
 
-function loadCompanyIdFromContent(data) {
+function loadCompanyIdFromContent(data, schedule) {
   const json = JSON.parse(data);
 
+  // Note that if the display doesn't have a schedule assigned, licensing data won't be avaiable.
   if (json.content && json.content.schedule && json.content.schedule.companyId) {
     const companyId = json.content.schedule.companyId;
 
     logger.file(`Setting company id as ${companyId}`);
     config.setCompanyId(companyId);
 
-    iterations.ensureLicensingLoopIsRunning();
+    iterations.ensureLicensingLoopIsRunning(schedule);
   }
   else {
     logger.error(`Company id could not be retrieved from content: ${data}`);
   }
 }
 
-function receiveContentFile(message) {
+function receiveContentFile(message, schedule = setInterval) {
   if (["DELETED", "NOEXIST"].includes(message.status)) {
     return;
   }
@@ -66,16 +70,19 @@ function receiveContentFile(message) {
     return platform.readTextFile(path)
     .then(data => {
       try {
-        loadCompanyIdFromContent(data);
+        loadCompanyIdFromContent(data, schedule);
       } catch (error) {
         logger.error(error.stack, `Could not parse content file ${path}`);
       }
     })
+    .catch(error =>
+      logger.file(error.stack, `Could not read content file ${path}`)
+    )
   }
 }
 
 module.exports = {
-  checkIfLocalStorageIsAvailable,
+  startWatchIfLocalStorageModuleIsAvailable,
   clearMessageAlreadySentFlag,
   receiveContentFile
 };

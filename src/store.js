@@ -7,12 +7,6 @@ const config = require("./config");
 const ACTIVE_STATUS = ["Free", "On Trial", "Subscribed"];
 
 function fetchSubscriptionStatus() {
-  const companyId = config.getCompanyId();
-
-  if (!companyId) {
-    return Promise.reject(new Error("Company id not set"));
-  }
-
   const url = config.getSubscriptionStatusApiUrl();
 
   const agents = common.getProxyAgents();
