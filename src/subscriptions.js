@@ -46,4 +46,4 @@ function clear() {
   currentSubscriptionStatusTable = {};
 }
 
-module.exports = {isSubscriptionDataChanged, loadDataAndBroadcast, clear};
+module.exports = {broadcastSubscriptionData, isSubscriptionDataChanged, loadDataAndBroadcast, clear};
