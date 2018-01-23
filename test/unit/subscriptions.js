@@ -2,7 +2,7 @@
 /* eslint-disable max-statements, no-magic-numbers, function-paren-new */
 const assert = require("assert");
 const simple = require("simple-mock");
-const common = require("common-display-module");
+const messaging = require("common-display-module/messaging");
 
 const store = require("../../src/store");
 const subscriptions = require("../../src/subscriptions");
@@ -11,7 +11,7 @@ describe("Subscriptions - Unit", ()=>
 {
 
   beforeEach(() => {
-    simple.mock(common, "broadcastMessage").returnWith();
+    simple.mock(messaging, "broadcastMessage").returnWith();
   })
 
   afterEach(() => {
@@ -142,9 +142,9 @@ describe("Subscriptions - Unit", ()=>
 
     return subscriptions.loadDataAndBroadcast()
     .then(() => {
-      assert(common.broadcastMessage.called);
-      assert.equal(common.broadcastMessage.callCount, 1);
-      assert.deepEqual(common.broadcastMessage.lastCall.args[0], {
+      assert(messaging.broadcastMessage.called);
+      assert.equal(messaging.broadcastMessage.callCount, 1);
+      assert.deepEqual(messaging.broadcastMessage.lastCall.args[0], {
         from: 'licensing',
         topic: 'licensing-update',
         subscriptions: {
@@ -160,8 +160,8 @@ describe("Subscriptions - Unit", ()=>
       return subscriptions.loadDataAndBroadcast();
     })
     .then(() => {
-      assert.equal(common.broadcastMessage.callCount, 2);
-      assert.deepEqual(common.broadcastMessage.lastCall.args[0], {
+      assert.equal(messaging.broadcastMessage.callCount, 2);
+      assert.deepEqual(messaging.broadcastMessage.lastCall.args[0], {
         from: 'licensing',
         topic: 'licensing-update',
         subscriptions: {
@@ -178,7 +178,7 @@ describe("Subscriptions - Unit", ()=>
     })
     .then(() => {
       // no further change in active flags even if timestamps change, no broadcast then
-      assert.equal(common.broadcastMessage.callCount, 2);
+      assert.equal(messaging.broadcastMessage.callCount, 2);
     })
   });
 

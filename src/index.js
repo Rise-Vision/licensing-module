@@ -1,6 +1,6 @@
 /* eslint-disable default-case */
 
-const common = require("common-display-module");
+const messaging = require("common-display-module/messaging");
 const config = require("./config");
 const logger = require("./logger");
 const subscriptions = require("./subscriptions");
@@ -9,7 +9,7 @@ const watch = require("./watch");
 const displayConfigBucket = "risevision-display-notifications";
 
 function run(schedule = setInterval) {
-  common.receiveMessages(config.moduleName).then(receiver => {
+  messaging.receiveMessages(config.moduleName).then(receiver => {
     receiver.on("message", message => {
       switch (message.topic.toUpperCase()) {
         case "CLIENT-LIST":
@@ -27,7 +27,7 @@ function run(schedule = setInterval) {
       }
     });
 
-    common.getClientList(config.moduleName);
+    messaging.getClientList(config.moduleName);
 
     return logger.all("started");
   })

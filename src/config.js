@@ -1,12 +1,16 @@
 /* eslint-disable array-bracket-newline, line-comment-position, no-inline-comments, comma-dangle */
 
 const common = require("common-display-module");
+const licensing = require("common-display-module/licensing");
+const path = require("path");
 
 const moduleName = "licensing";
+
+const CACHE_FILE_NAME = "licensing-cache.json";
 const SUBSCRIPTION_API_SERVER = 'store-dot-rvaserver2.appspot.com';
 const PRODUCT_CODES = [
-  'c4b368be86245bf9501baaa6e0b00df9719869fd', // Rise Player Professional
-  'b0cba08a4baa0c62b8cdc621b6f6a124f89a03db', // Rise Storage
+  licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE,
+  licensing.RISE_STORAGE_PRODUCT_CODE,
 ].join(',');
 
 let companyId = null;
@@ -17,6 +21,16 @@ function getSubscriptionStatusApiUrl() {
   }
 
   return `https://${SUBSCRIPTION_API_SERVER}/v1/company/${companyId}/product/status?pc=${PRODUCT_CODES}`;
+}
+
+function getCachePath() {
+  const modulePath = common.getModulePath(moduleName);
+
+  if (!modulePath) {
+    throw new Error(`No path found for ${moduleName}`);
+  }
+
+  return path.join(modulePath, CACHE_FILE_NAME);
 }
 
 module.exports = {
@@ -35,5 +49,6 @@ module.exports = {
   setCompanyId(id) {
     companyId = id;
   },
+  getCachePath,
   getSubscriptionStatusApiUrl
 };

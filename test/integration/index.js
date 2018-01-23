@@ -2,6 +2,7 @@
 /* eslint-disable max-statements, no-magic-numbers, function-paren-newline */
 const assert = require("assert");
 const common = require("common-display-module");
+const messaging = require("common-display-module/messaging");
 const simple = require("simple-mock");
 const platform = require("rise-common-electron").platform;
 
@@ -9,6 +10,7 @@ const config = require("../../src/config");
 const iterations = require("../../src/iterations");
 const licensing = require("../../src/index");
 const logger = require("../../src/logger");
+const persistence = require("../../src/persistence");
 const store = require("../../src/store");
 const subscriptions = require("../../src/subscriptions");
 const watch = require("../../src/watch");
@@ -110,10 +112,11 @@ describe("Licensing - Integration", ()=>
   {
     const settings = {displayid: "DIS123"};
 
-    simple.mock(common, "broadcastMessage").returnWith();
-    simple.mock(common, "getClientList").returnWith();
+    simple.mock(messaging, "broadcastMessage").returnWith();
+    simple.mock(messaging, "getClientList").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(common, "getModuleVersion").returnWith("1.1");
+    simple.mock(persistence, "save").resolveWith(true);
     simple.mock(platform, "fileExists").returnWith(true);
     simple.mock(platform, "readTextFile").resolveWith(content);
     simple.mock(Date, "now").returnWith(100);
@@ -186,15 +189,15 @@ describe("Licensing - Integration", ()=>
       return Promise.resolve(response);
     });
 
-    simple.mock(common, "receiveMessages").resolveWith(new Receiver());
+    simple.mock(messaging, "receiveMessages").resolveWith(new Receiver());
 
     licensing.run((action, interval) => {
       assert.equal(interval, ONE_DAY);
 
-      assert(common.broadcastMessage.callCount, 1);
+      assert(messaging.broadcastMessage.callCount, 1);
 
       {
-        const event = common.broadcastMessage.lastCall.args[0];
+        const event = messaging.broadcastMessage.lastCall.args[0];
 
         // I sent the event
         assert.equal(event.from, "licensing");
@@ -214,9 +217,9 @@ describe("Licensing - Integration", ()=>
       }
 
       action().then(() => {
-        assert(common.broadcastMessage.callCount, 2);
+        assert(messaging.broadcastMessage.callCount, 2);
 
-        const event = common.broadcastMessage.lastCall.args[0];
+        const event = messaging.broadcastMessage.lastCall.args[0];
 
         // I sent the event
         assert.equal(event.from, "licensing");
@@ -238,15 +241,15 @@ describe("Licensing - Integration", ()=>
       })
       .then(() => {
         // no more broadcasts
-        assert(common.broadcastMessage.callCount, 2);
+        assert(messaging.broadcastMessage.callCount, 2);
 
         return eventHandler({topic: "licensing-request"});
       })
       .then(() => {
         // forced broadcast, same event as current.
-        assert(common.broadcastMessage.callCount, 3);
+        assert(messaging.broadcastMessage.callCount, 3);
 
-        const event = common.broadcastMessage.lastCall.args[0];
+        const event = messaging.broadcastMessage.lastCall.args[0];
 
         // I sent the event
         assert.equal(event.from, "licensing");

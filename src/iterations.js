@@ -22,6 +22,8 @@ function ensureLicensingLoopIsRunning(schedule = setInterval) {
       .then(() => programLicensingDataLoadingRetries(schedule))
     );
   }
+
+  return Promise.resolve();
 }
 
 function programLicensingDataUpdate(schedule, interval) {

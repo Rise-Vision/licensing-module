@@ -1,9 +1,11 @@
 /* eslint-disable function-paren-newline */
 
 const common = require("common-display-module");
+const messaging = require("common-display-module/messaging");
 const config = require("./config");
 const iterations = require("./iterations");
 const logger = require("./logger");
+const persistence = require("./persistence");
 const platform = require("rise-common-electron").platform;
 
 // So we ensure it will only be sent once.
@@ -28,13 +30,13 @@ function startWatchIfLocalStorageModuleIsAvailable(message) {
     }
   }
 
-  return Promise.resolve()
+  return Promise.resolve();
 }
 
 function sendWatchMessage() {
   return common.getDisplayId()
   .then(displayId =>
-    common.broadcastMessage({
+    messaging.broadcastMessage({
       from: config.moduleName,
       topic: "watch",
       filePath: `risevision-display-notifications/${displayId}/content.json`
@@ -52,11 +54,11 @@ function loadCompanyIdFromContent(data, schedule) {
     logger.file(`Setting company id as ${companyId}`);
     config.setCompanyId(companyId);
 
-    iterations.ensureLicensingLoopIsRunning(schedule);
+    return iterations.ensureLicensingLoopIsRunning(schedule)
+    .then(persistence.save);
   }
-  else {
-    logger.error(`Company id could not be retrieved from content: ${data}`);
-  }
+
+  return logger.error(`Company id could not be retrieved from content: ${data}`);
 }
 
 function receiveContentFile(message, schedule = setInterval) {
@@ -70,9 +72,9 @@ function receiveContentFile(message, schedule = setInterval) {
     return platform.readTextFile(path)
     .then(data => {
       try {
-        loadCompanyIdFromContent(data, schedule);
+        return loadCompanyIdFromContent(data, schedule);
       } catch (error) {
-        logger.error(error.stack, `Could not parse content file ${path}`);
+        return logger.error(error.stack, `Could not parse content file ${path}`);
       }
     })
     .catch(error =>

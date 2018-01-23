@@ -2,6 +2,7 @@
 /* eslint-disable max-statements */
 const assert = require("assert");
 const common = require("common-display-module");
+const messaging = require("common-display-module/messaging");
 const simple = require("simple-mock");
 
 const config = require("../../src/config");
@@ -15,7 +16,7 @@ describe("Logger - Unit", ()=>
     config.setCompanyId('123');
     const settings = {displayid: "DIS123"};
 
-    simple.mock(common, "broadcastMessage").returnWith();
+    simple.mock(messaging, "broadcastMessage").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(common, "getModuleVersion").returnWith("1.1");
     simple.mock(logger, "file").returnWith();
@@ -29,10 +30,10 @@ describe("Logger - Unit", ()=>
   it("should log messages", () => {
     return logger.all('started')
     .then(() => {
-      assert(common.broadcastMessage.called);
+      assert(messaging.broadcastMessage.called);
 
       // this is the actual event object sent to the logging module
-      const event = common.broadcastMessage.lastCall.args[0];
+      const event = messaging.broadcastMessage.lastCall.args[0];
 
       // I sent the event
       assert.equal(event.from, "licensing");
@@ -58,11 +59,11 @@ describe("Logger - Unit", ()=>
   it("should log Subscription API call error remotely", () => {
     return logger.logSubscriptionAPICallError(Error('failure'))
     .then(() => {
-      assert(common.broadcastMessage.called);
+      assert(messaging.broadcastMessage.called);
       assert(!logger.file.called);
 
       // this is the actual event object sent to the logging module
-      const event = common.broadcastMessage.lastCall.args[0];
+      const event = messaging.broadcastMessage.lastCall.args[0];
 
       // I sent the event
       assert.equal(event.from, "licensing");
@@ -89,7 +90,7 @@ describe("Logger - Unit", ()=>
     // false flag means local logging.
     logger.logSubscriptionAPICallError(Error('failure'), false);
 
-    assert(!common.broadcastMessage.called);
+    assert(!messaging.broadcastMessage.called);
     assert(logger.file.called);
 
     const call = logger.file.lastCall;

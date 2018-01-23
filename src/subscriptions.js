@@ -1,5 +1,5 @@
 /* eslint-disable function-paren-new, function-paren-newline */
-const common = require("common-display-module");
+const messaging = require("common-display-module/messaging");
 
 const config = require("./config");
 const store = require("./store");
@@ -17,6 +17,10 @@ function isSubscriptionDataChanged(current, updated) {
     );
 }
 
+function getSubscriptionData() {
+  return currentSubscriptionStatusTable;
+}
+
 function broadcastSubscriptionData() {
   const message = {
     from: config.moduleName,
@@ -24,7 +28,7 @@ function broadcastSubscriptionData() {
     subscriptions: currentSubscriptionStatusTable
   };
 
-  common.broadcastMessage(message);
+  messaging.broadcastMessage(message);
 }
 
 function loadDataAndBroadcast() {
@@ -46,4 +50,10 @@ function clear() {
   currentSubscriptionStatusTable = {};
 }
 
-module.exports = {broadcastSubscriptionData, isSubscriptionDataChanged, loadDataAndBroadcast, clear};
+module.exports = {
+  broadcastSubscriptionData,
+  getSubscriptionData,
+  isSubscriptionDataChanged,
+  loadDataAndBroadcast,
+  clear
+};
