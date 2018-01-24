@@ -43,7 +43,8 @@ function applyStatusUpdates(updatedStatusTable) {
     Object.assign({}, currentSubscriptionStatusTable, updatedStatusTable);
 
   if (changed) {
-    logger.file(`Subscription data updated: ${currentSubscriptionStatusTable}`);
+    const data = JSON.stringify(currentSubscriptionStatusTable);
+    logger.file(`Subscription data updated: ${data}`);
 
     return broadcastSubscriptionData();
   }
