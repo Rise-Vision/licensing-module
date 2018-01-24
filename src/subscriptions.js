@@ -1,5 +1,6 @@
 /* eslint-disable function-paren-new, function-paren-newline */
 const messaging = require("common-display-module/messaging");
+const licensing = require("common-display-module/licensing");
 
 const config = require("./config");
 const store = require("./store");
@@ -35,18 +36,36 @@ function broadcastSubscriptionData() {
   messaging.broadcastMessage(message);
 }
 
+function applyStatusUpdates(updatedStatusTable) {
+  const changed = hasSubscriptionDataChanges(currentSubscriptionStatusTable, updatedStatusTable);
+
+  currentSubscriptionStatusTable =
+    Object.assign({}, currentSubscriptionStatusTable, updatedStatusTable);
+
+  return changed && broadcastSubscriptionData();
+}
+
 function loadSubscriptionApiDataAndBroadcast() {
   logger.debug("loading subscription data");
 
   // Currently the subscription status come only from store, but in future modules it may also come from the display's GCS bucket.
   return store.getSubscriptionStatusUpdates()
-  .then(updatedStatusTable => {
-    const changed = hasSubscriptionDataChanges(currentSubscriptionStatusTable, updatedStatusTable);
+  .then(applyStatusUpdates);
+}
 
-    currentSubscriptionStatusTable =
-      Object.assign({}, currentSubscriptionStatusTable, updatedStatusTable);
+function loadRisePlayerProfessionalAuthorizationAndBroadcast() {
+  logger.debug("loading Rise Player Professional authorization");
 
-    return changed && broadcastSubscriptionData();
+  // Currently the subscription status come only from store, but in future modules it may also come from the display's GCS bucket.
+  return store.getRisePlayerProfessionalAuthorization()
+  .then(active => {
+    const data = {
+      [licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE]: {
+        active, timestamp: Date.now()
+      }
+    };
+
+    applyStatusUpdates(data);
   })
 }
 
@@ -61,5 +80,6 @@ module.exports = {
   getSubscriptionData,
   hasSubscriptionDataChanges,
   loadSubscriptionApiDataAndBroadcast,
+  loadRisePlayerProfessionalAuthorizationAndBroadcast,
   clear
 };

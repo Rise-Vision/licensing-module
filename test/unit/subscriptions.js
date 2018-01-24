@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-/* eslint-disable max-statements, no-magic-numbers, function-paren-new */
+/* eslint-disable max-statements, no-magic-numbers, function-paren-new, no-plusplus */
 const assert = require("assert");
 const simple = require("simple-mock");
 const messaging = require("common-display-module/messaging");
@@ -12,6 +12,7 @@ describe("Subscriptions - Unit", ()=>
 
   beforeEach(() => {
     simple.mock(messaging, "broadcastMessage").returnWith();
+    simple.mock(Date, "now").returnWith(400);
   })
 
   afterEach(() => {
@@ -195,6 +196,55 @@ describe("Subscriptions - Unit", ()=>
       });
 
       return subscriptions.loadSubscriptionApiDataAndBroadcast();
+    })
+    .then(() => {
+      // no further change in active flags even if timestamps change, no broadcast then
+      assert.equal(messaging.broadcastMessage.callCount, 2);
+    })
+  });
+
+  it("should broadcast messages depending on watch API answers", () => {
+    let count = 0;
+
+    simple.mock(store, "getRisePlayerProfessionalAuthorization").callFn(() => {
+      return Promise.resolve(count++ > 1);
+    });
+
+    return subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast()
+    .then(() => {
+      assert(messaging.broadcastMessage.called);
+      assert.equal(messaging.broadcastMessage.callCount, 1);
+      assert.deepEqual(messaging.broadcastMessage.lastCall.args[0], {
+        from: 'licensing',
+        topic: 'licensing-update',
+        subscriptions: {
+          c4b368be86245bf9501baaa6e0b00df9719869fd: {
+            active: false, timestamp: 400
+          }
+        }
+      });
+
+      return subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast();
+    })
+    .then(() => {
+      // no change in active flag
+      assert.equal(messaging.broadcastMessage.callCount, 1);
+
+      return subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast();
+    })
+    .then(() => {
+      assert.equal(messaging.broadcastMessage.callCount, 2);
+      assert.deepEqual(messaging.broadcastMessage.lastCall.args[0], {
+        from: 'licensing',
+        topic: 'licensing-update',
+        subscriptions: {
+          c4b368be86245bf9501baaa6e0b00df9719869fd: {
+            active: true, timestamp: 400
+          }
+        }
+      });
+
+      return subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast();
     })
     .then(() => {
       // no further change in active flags even if timestamps change, no broadcast then
