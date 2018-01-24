@@ -8,7 +8,7 @@ const platform = require("rise-common-electron").platform;
 
 const config = require("../../src/config");
 const iterations = require("../../src/iterations");
-const widget = require("../../src/deprecated_widget_api_iterations");
+const deprecatedIterations = require("../../src/deprecated_widget_api_iterations");
 const licensing = require("../../src/index");
 const logger = require("../../src/logger");
 const persistence = require("../../src/persistence");
@@ -121,7 +121,8 @@ describe("Licensing - Integration", ()=>
     simple.mock(persistence, "save").resolveWith(true);
     simple.mock(platform, "fileExists").returnWith(true);
     simple.mock(Date, "now").returnWith(100);
-    simple.mock(widget, "ensureLicensingLoopIsRunning").resolveWith(true);
+    simple.mock(deprecatedIterations, "ensureLicensingLoopIsRunning").resolveWith(true);
+    simple.mock(watch, "sendWatchMessage").resolveWith(true);
 
     simple.mock(platform, "readTextFile").callFn(path => {
       return Promise.resolve(
@@ -141,6 +142,7 @@ describe("Licensing - Integration", ()=>
     simple.restore();
     config.setCompanyId(null);
     iterations.stop();
+    deprecatedIterations.stop();
     subscriptions.clear();
     watch.clearMessageAlreadySentFlag();
   });

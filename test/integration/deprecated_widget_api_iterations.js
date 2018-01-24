@@ -8,31 +8,17 @@ const platform = require("rise-common-electron").platform;
 
 const config = require("../../src/config");
 const iterations = require("../../src/iterations");
-const deprecatedIterations = require("../../src/deprecated_widget_api_iterations");
 const licensing = require("../../src/index");
 const logger = require("../../src/logger");
 const persistence = require("../../src/persistence");
 const store = require("../../src/store");
 const subscriptions = require("../../src/subscriptions");
 const watch = require("../../src/watch");
+const deprecatedIterations = require("../../src/deprecated_widget_api_iterations");
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
-const content = `
-  {
-    "companyId": 1111,
-    "licensing": {
-      "c4b368be86245bf9501baaa6e0b00df9719869fd": {
-        "active": true, "timestamp": 100
-      },
-      "b0cba08a4baa0c62b8cdc621b6f6a124f89a03db": {
-        "active": false, "timestamp": 100
-      }
-    }
-  }
-`;
-
-describe("Persistence - Integration", ()=>
+describe("Deprecated Widget API Iterations - Integration", ()=>
 {
 
   beforeEach(() =>
@@ -44,12 +30,13 @@ describe("Persistence - Integration", ()=>
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(common, "getModuleVersion").returnWith("1.1");
     simple.mock(common, "getInstallDir").returnWith("/home/rise/rvplayer");
+    simple.mock(iterations, "configureAndStart").resolveWith(true);
     simple.mock(persistence, "save").resolveWith(true);
     simple.mock(platform, "fileExists").returnWith(true);
-    simple.mock(Date, "now").returnWith(200);
-    simple.mock(deprecatedIterations, "ensureLicensingLoopIsRunning").resolveWith(true);
+    simple.mock(watch, "startWatchIfLocalStorageModuleIsAvailable").resolveWith(true);
+    simple.mock(Date, "now").returnWith(100);
 
-    simple.mock(platform, "readTextFile").resolveWith(content);
+    simple.mock(platform, "readTextFile").resolveWith({});
 
     simple.mock(logger, "file").returnWith();
     simple.mock(logger, "all").returnWith();
@@ -68,7 +55,7 @@ describe("Persistence - Integration", ()=>
     watch.clearMessageAlreadySentFlag();
   });
 
-  it("should start iterations and broadcast licensing events based on cache file contents", done => {
+  it("should start watch API iterations and broadcast licensing events", done => {
     let eventHandler = null;
 
     function Receiver() {
@@ -77,32 +64,32 @@ describe("Persistence - Integration", ()=>
       }
     }
 
-    simple.mock(store, "fetchSubscriptionStatus").resolveWith({
-      body: [
-        {
-          pc: 'c4b368be86245bf9501baaa6e0b00df9719869fd',
-          status: 'Subscribed',
-          expiry: null,
-          trialPeriod: 30
-        },
-        {
-          pc: 'b0cba08a4baa0c62b8cdc621b6f6a124f89a03db',
-          status: 'Subscribed',
-          expiry: null,
-          trialPeriod: 30
+    let count = 0;
+
+    simple.mock(store, "fetchRisePlayerProfessionalAuthorization").callFn(() => {
+      count += 1;
+
+      const response = {
+        body: {
+          authorized: count > 2,
+          expiry: '2018-01-25T16:47:42.042+0000',
+          signatures: null,
+          error: null
         }
-      ]
+      };
+
+      return Promise.resolve(response);
     });
 
     simple.mock(messaging, "receiveMessages").resolveWith(new Receiver());
 
-    licensing.run((action, interval) => {
+    licensing.run(() => {}, (action, interval) => {
       assert.equal(interval, ONE_DAY);
 
-      assert(messaging.broadcastMessage.callCount, 2);
+      assert.equal(messaging.broadcastMessage.callCount, 1);
 
       {
-        const event = messaging.broadcastMessage.calls[0].args[0];
+        const event = messaging.broadcastMessage.lastCall.args[0];
 
         // I sent the event
         assert.equal(event.from, "licensing");
@@ -113,43 +100,21 @@ describe("Persistence - Integration", ()=>
 
         const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
         assert(rpp);
-        assert(rpp.active);
+        assert(!rpp.active);
 
         const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
-        assert(storage);
-        // cache file marks it as not active
-        assert(!storage.active);
-      }
-
-      {
-        const event = messaging.broadcastMessage.calls[1].args[0];
-
-        // I sent the event
-        assert.equal(event.from, "licensing");
-        // it's a log event
-        assert.equal(event.topic, "licensing-update");
-
-        assert(event.subscriptions);
-
-        const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
-        assert(rpp);
-        assert(rpp.active);
-
-        const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
-        assert(storage);
-        // API call says it's active
-        assert(storage.active);
+        assert(!storage);
       }
 
       action().then(() => {
-        // no more broadcasts
-        assert(messaging.broadcastMessage.callCount, 2);
+        // no changes until next
 
-        return eventHandler({topic: "licensing-request"});
+        assert.equal(messaging.broadcastMessage.callCount, 1);
+
+        return action();
       })
       .then(() => {
-        // forced broadcast, same event as current.
-        assert(messaging.broadcastMessage.callCount, 3);
+        assert.equal(messaging.broadcastMessage.callCount, 2);
 
         const event = messaging.broadcastMessage.lastCall.args[0];
 
@@ -165,8 +130,35 @@ describe("Persistence - Integration", ()=>
         assert(rpp.active);
 
         const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
-        assert(storage);
-        assert(storage.active);
+        assert(!storage);
+
+        return action();
+      })
+      .then(() => {
+        // no more broadcasts
+        assert.equal(messaging.broadcastMessage.callCount, 2);
+
+        return eventHandler({topic: "licensing-request"});
+      })
+      .then(() => {
+        // forced broadcast, same event as current.
+        assert.equal(messaging.broadcastMessage.callCount, 3);
+
+        const event = messaging.broadcastMessage.lastCall.args[0];
+
+        // I sent the event
+        assert.equal(event.from, "licensing");
+        // it's a log event
+        assert.equal(event.topic, "licensing-update");
+
+        assert(event.subscriptions);
+
+        const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
+        assert(rpp);
+        assert(rpp.active);
+
+        const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
+        assert(!storage);
 
         done();
       })

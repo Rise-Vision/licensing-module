@@ -22,7 +22,7 @@ function startWatchIfLocalStorageModuleIsAvailable(message) {
     const clients = message.clients;
 
     if (clients.includes("local-storage")) {
-      return sendWatchMessage()
+      return module.exports.sendWatchMessage()
       .then(() => watchMessageAlreadySent = true)
       .catch(error =>
         logger.file(error.stack, 'Error while sending watch message')
@@ -83,5 +83,6 @@ function receiveContentFile(message, schedule = setInterval) {
 module.exports = {
   startWatchIfLocalStorageModuleIsAvailable,
   clearMessageAlreadySentFlag,
-  receiveContentFile
+  receiveContentFile,
+  sendWatchMessage
 };

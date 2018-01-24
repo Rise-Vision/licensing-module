@@ -33,7 +33,7 @@ function broadcastSubscriptionData() {
     subscriptions: currentSubscriptionStatusTable
   };
 
-  messaging.broadcastMessage(message);
+  return messaging.broadcastMessage(message);
 }
 
 function applyStatusUpdates(updatedStatusTable) {
@@ -42,7 +42,11 @@ function applyStatusUpdates(updatedStatusTable) {
   currentSubscriptionStatusTable =
     Object.assign({}, currentSubscriptionStatusTable, updatedStatusTable);
 
-  return changed && broadcastSubscriptionData();
+  if (changed) {
+    logger.file(`Subscription data updated: ${currentSubscriptionStatusTable}`);
+
+    return broadcastSubscriptionData();
+  }
 }
 
 function loadSubscriptionApiDataAndBroadcast() {

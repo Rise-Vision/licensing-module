@@ -6,10 +6,13 @@ const messaging = require("common-display-module/messaging");
 const simple = require("simple-mock");
 const platform = require("rise-common-electron").platform;
 
+const config = require("../../src/config");
 const licensing = require("../../src/index");
 const logger = require("../../src/logger");
+const iterations = require("../../src/iterations");
+const subscriptions = require("../../src/subscriptions");
 const watch = require("../../src/watch");
-const widget = require("../../src/deprecated_widget_api_iterations");
+const deprecatedIterations = require("../../src/deprecated_widget_api_iterations");
 
 describe("Watch - Integration", ()=>
 {
@@ -25,12 +28,16 @@ describe("Watch - Integration", ()=>
     simple.mock(platform, "fileExists").returnWith(false);
     simple.mock(logger, "file").returnWith();
     simple.mock(logger, "all").returnWith();
-    simple.mock(widget, "ensureLicensingLoopIsRunning").resolveWith(true);
+    simple.mock(deprecatedIterations, "ensureLicensingLoopIsRunning").resolveWith(true);
   });
 
   afterEach(() => {
     simple.restore()
     watch.clearMessageAlreadySentFlag();
+    config.setCompanyId(null);
+    iterations.stop();
+    deprecatedIterations.stop();
+    subscriptions.clear();
   });
 
   it("should wait for local-storage to be available to send WATCH messages", done => {
@@ -90,7 +97,7 @@ describe("Watch - Integration", ()=>
 
     simple.mock(messaging, "receiveMessages").resolveWith(new Receiver());
 
-    licensing.run(() => {});
+    licensing.run(() => {}, () => {});
   });
 
 });
