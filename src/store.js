@@ -44,8 +44,14 @@ function fetchRisePlayerProfessionalAuthorization() {
   })
 }
 
+function getRisePlayerProfessionalAuthorization() {
+  return module.exports.fetchRisePlayerProfessionalAuthorization()
+  .then(response => response.body.authorized);
+}
+
 module.exports = {
   fetchSubscriptionStatus,
   fetchRisePlayerProfessionalAuthorization,
-  getSubscriptionStatusUpdates
+  getSubscriptionStatusUpdates,
+  getRisePlayerProfessionalAuthorization
 };
