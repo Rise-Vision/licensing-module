@@ -44,11 +44,22 @@ function logSubscriptionAPICallError(err, remote = true) {
   return call(detail, userFriendlyMessage);
 }
 
+// Will disappear when Apps Display Licensing is available.
+function logDeprecatedWidgetAPICallError(err, remote = true) {
+  const detail = err.stack;
+  const userFriendlyMessage = 'Deprecated Widget Status API Call failed';
+
+  const call = remote ? module.exports.error : module.exports.file;
+
+  return call(detail, userFriendlyMessage);
+}
+
 module.exports = {
   file: logger.file,
   debug: logger.debug,
   error,
   external,
   all,
-  logSubscriptionAPICallError
+  logSubscriptionAPICallError,
+  logDeprecatedWidgetAPICallError
 };

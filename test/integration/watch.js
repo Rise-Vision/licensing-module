@@ -9,6 +9,7 @@ const platform = require("rise-common-electron").platform;
 const licensing = require("../../src/index");
 const logger = require("../../src/logger");
 const watch = require("../../src/watch");
+const widget = require("../../src/deprecated_widget_api_iterations");
 
 describe("Watch - Integration", ()=>
 {
@@ -24,6 +25,7 @@ describe("Watch - Integration", ()=>
     simple.mock(platform, "fileExists").returnWith(false);
     simple.mock(logger, "file").returnWith();
     simple.mock(logger, "all").returnWith();
+    simple.mock(widget, "ensureLicensingLoopIsRunning").resolveWith(true);
   });
 
   afterEach(() => {
