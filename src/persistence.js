@@ -20,10 +20,10 @@ function save() {
 
 function saveAndReport() {
   return module.exports.save()
-  .catch(() => {
-    // const path = config.getCachePath();
+  .catch(error => {
+    const path = config.getCachePath();
 
-    // return logger.error(error.stack, `File write error: ${path}`);
+    return logger.error(error.stack, `File write error: ${path}`);
   })
 }
 
