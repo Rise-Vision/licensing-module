@@ -3,6 +3,7 @@ const messaging = require("common-display-module/messaging");
 const licensing = require("common-display-module/licensing");
 
 const config = require("./config");
+const persistence = require("./persistence");
 const store = require("./store");
 const logger = require("./logger");
 
@@ -42,12 +43,15 @@ function applyStatusUpdates(updatedStatusTable) {
   currentSubscriptionStatusTable =
     Object.assign({}, currentSubscriptionStatusTable, updatedStatusTable);
 
-  if (changed) {
-    const data = JSON.stringify(currentSubscriptionStatusTable);
-    logger.file(`Subscription data updated: ${data}`);
+  return persistence.saveAndReport(currentSubscriptionStatusTable)
+  .then(() => {
+    if (changed) {
+      const data = JSON.stringify(currentSubscriptionStatusTable);
+      logger.file(`Subscription data updated: ${data}`);
 
-    return broadcastSubscriptionData();
-  }
+      return broadcastSubscriptionData();
+    }
+  });
 }
 
 function loadSubscriptionApiDataAndBroadcast() {
@@ -70,7 +74,7 @@ function loadRisePlayerProfessionalAuthorizationAndBroadcast() {
       }
     };
 
-    applyStatusUpdates(data);
+    return applyStatusUpdates(data);
   })
 }
 

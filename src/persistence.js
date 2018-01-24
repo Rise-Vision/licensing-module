@@ -2,13 +2,11 @@ const platform = require("rise-common-electron/platform");
 
 const config = require("./config");
 const logger = require("./logger");
-const subscriptions = require("./subscriptions");
 
 const EMPTY_CONTENTS = {companyId: null, licensing: {}};
 
-function save() {
+function save(licensing) {
   const companyId = config.getCompanyId();
-  const licensing = subscriptions.getSubscriptionData();
 
   const data = {companyId, licensing};
   const text = JSON.stringify(data);
@@ -18,8 +16,8 @@ function save() {
   return platform.writeTextFile(path, text);
 }
 
-function saveAndReport() {
-  return module.exports.save()
+function saveAndReport(licensing) {
+  return module.exports.save(licensing)
   .catch(error => {
     const path = config.getCachePath();
 

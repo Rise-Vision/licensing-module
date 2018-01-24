@@ -37,7 +37,7 @@ describe("Persistence - Unit", ()=>
 
     config.setCompanyId(1111);
 
-    return persistence.save().then(() => {
+    return persistence.save(subscriptions.getSubscriptionData()).then(() => {
       assert(platform.writeTextFile.called);
       assert.equal(platform.writeTextFile.callCount, 1);
 
@@ -65,7 +65,7 @@ describe("Persistence - Unit", ()=>
   });
 
   it("should save empty licensing data", () => {
-    return persistence.save().then(() => {
+    return persistence.save(subscriptions.getSubscriptionData()).then(() => {
       assert(platform.writeTextFile.called);
       assert.equal(platform.writeTextFile.callCount, 1);
 

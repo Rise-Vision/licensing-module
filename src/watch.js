@@ -6,6 +6,7 @@ const config = require("./config");
 const iterations = require("./iterations");
 const logger = require("./logger");
 const persistence = require("./persistence");
+const subscriptions = require("./subscriptions");
 const platform = require("rise-common-electron").platform;
 
 // So we ensure it will only be sent once.
@@ -52,7 +53,7 @@ function loadCompanyIdFromContent(data, schedule) {
     const companyId = json.content.schedule.companyId;
 
     return iterations.configureAndStart(companyId, null, schedule)
-    .then(persistence.save);
+    .then(() => persistence.save(subscriptions.getSubscriptionData()));
   }
 
   return logger.error(`Company id could not be retrieved from content: ${data}`);

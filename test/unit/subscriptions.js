@@ -4,6 +4,7 @@ const assert = require("assert");
 const simple = require("simple-mock");
 const messaging = require("common-display-module/messaging");
 
+const persistence = require("../../src/persistence");
 const store = require("../../src/store");
 const subscriptions = require("../../src/subscriptions");
 
@@ -13,6 +14,7 @@ describe("Subscriptions - Unit", ()=>
   beforeEach(() => {
     simple.mock(messaging, "broadcastMessage").returnWith();
     simple.mock(Date, "now").returnWith(400);
+    simple.mock(persistence, "save").resolveWith(true);
   })
 
   afterEach(() => {
@@ -213,6 +215,7 @@ describe("Subscriptions - Unit", ()=>
     return subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast()
     .then(() => {
       assert(messaging.broadcastMessage.called);
+
       assert.equal(messaging.broadcastMessage.callCount, 1);
       assert.deepEqual(messaging.broadcastMessage.lastCall.args[0], {
         from: 'licensing',
