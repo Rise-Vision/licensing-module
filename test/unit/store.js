@@ -32,7 +32,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {
@@ -55,7 +55,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {
@@ -78,7 +78,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {
@@ -101,7 +101,7 @@ describe("Store - Unit", ()=>
         ]
       });
 
-      return store.getSubscriptionStatusTable()
+      return store.getSubscriptionStatusUpdates()
       .then(table =>
       {
         assert.deepEqual(table, {
@@ -124,7 +124,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {
@@ -147,7 +147,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {
@@ -170,7 +170,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {

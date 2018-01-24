@@ -6,16 +6,20 @@ const config = require("./config");
 // See https://developer.risevision.com/documentation/store-api/subscription-status/sub-status-api
 const ACTIVE_STATUS = ["Free", "On Trial", "Subscribed"];
 
-function fetchSubscriptionStatus() {
-  const url = config.getSubscriptionStatusApiUrl();
-
+function fetchJSON(url) {
   const agents = common.getProxyAgents();
   const options = {json: true, agent: agents.httpsAgent};
 
   return got(url, options);
 }
 
-function getSubscriptionStatusTable() {
+function fetchSubscriptionStatus() {
+  const url = config.getSubscriptionStatusApiUrl();
+
+  return fetchJSON(url);
+}
+
+function getSubscriptionStatusUpdates() {
   return module.exports.fetchSubscriptionStatus()
   .then(response => {
     const timestamp = Date.now();
@@ -31,4 +35,17 @@ function getSubscriptionStatusTable() {
   });
 }
 
-module.exports = {fetchSubscriptionStatus, getSubscriptionStatusTable};
+function fetchRisePlayerProfessionalAuthorization() {
+  return common.getDisplayId()
+  .then(displayId => {
+    const url = config.getRisePlayerProfessionalAuthorizationApiUrl(displayId);
+
+    return fetchJSON(url);
+  })
+}
+
+module.exports = {
+  fetchSubscriptionStatus,
+  fetchRisePlayerProfessionalAuthorization,
+  getSubscriptionStatusUpdates
+};

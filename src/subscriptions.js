@@ -11,13 +11,13 @@ function init(data) {
   currentSubscriptionStatusTable = data;
 }
 
-function isSubscriptionDataChanged(current, updated) {
+function hasSubscriptionDataChanges(current, updated) {
   const currentKeys = Object.keys(current);
   const updatedKeys = Object.keys(updated);
 
-  return currentKeys.length !== updatedKeys.length ||
-    currentKeys.some(key =>
-      !updated[key] || current[key].active !== updated[key].active
+  return currentKeys.length < updatedKeys.length ||
+    updatedKeys.some(key =>
+      !current[key] || current[key].active !== updated[key].active
     );
 }
 
@@ -35,15 +35,16 @@ function broadcastSubscriptionData() {
   messaging.broadcastMessage(message);
 }
 
-function loadDataAndBroadcast() {
+function loadSubscriptionApiDataAndBroadcast() {
   logger.debug("loading subscription data");
 
   // Currently the subscription status come only from store, but in future modules it may also come from the display's GCS bucket.
-  return store.getSubscriptionStatusTable()
-  .then(updatedSubscriptionStatusTable => {
-    const changed = isSubscriptionDataChanged(currentSubscriptionStatusTable, updatedSubscriptionStatusTable);
+  return store.getSubscriptionStatusUpdates()
+  .then(updatedStatusTable => {
+    const changed = hasSubscriptionDataChanges(currentSubscriptionStatusTable, updatedStatusTable);
 
-    currentSubscriptionStatusTable = updatedSubscriptionStatusTable;
+    currentSubscriptionStatusTable =
+      Object.assign({}, currentSubscriptionStatusTable, updatedStatusTable);
 
     return changed && broadcastSubscriptionData();
   })
@@ -58,7 +59,7 @@ module.exports = {
   init,
   broadcastSubscriptionData,
   getSubscriptionData,
-  isSubscriptionDataChanged,
-  loadDataAndBroadcast,
+  hasSubscriptionDataChanges,
+  loadSubscriptionApiDataAndBroadcast,
   clear
 };

@@ -12,7 +12,6 @@ const displayConfigBucket = "risevision-display-notifications";
 
 function startSubscriptionApiRequestsIfCompanyIdIsAvailable(companyId, licensing, schedule) {
   if (companyId) {
-
     return iterations.configureAndStart(companyId, licensing, schedule);
   }
 

@@ -8,8 +8,8 @@ const moduleName = "licensing";
 
 const CACHE_FILE_NAME = "licensing-cache.json";
 const SUBSCRIPTION_API_SERVER = 'store-dot-rvaserver2.appspot.com';
-const PRODUCT_CODES = [
-  licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE,
+
+const PRODUCT_CODES_BY_COMPANY = [
   licensing.RISE_STORAGE_PRODUCT_CODE,
 ].join(',');
 
@@ -20,7 +20,16 @@ function getSubscriptionStatusApiUrl() {
     throw Error("Company ID not set");
   }
 
-  return `https://${SUBSCRIPTION_API_SERVER}/v1/company/${companyId}/product/status?pc=${PRODUCT_CODES}`;
+  return `https://${SUBSCRIPTION_API_SERVER}/v1/company/${companyId}/product/status?pc=${
+    PRODUCT_CODES_BY_COMPANY
+  }`;
+}
+
+// this call is deprectated and will be substituted by Apps Display Licensing when it becomes available.
+function getRisePlayerProfessionalAuthorizationApiUrl(displayId) {
+  return `https://${SUBSCRIPTION_API_SERVER}/v1/widget/auth?id=${displayId}&pc=${
+    licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE
+  }`;
 }
 
 function getCachePath() {
@@ -50,5 +59,6 @@ module.exports = {
     companyId = id;
   },
   getCachePath,
-  getSubscriptionStatusApiUrl
+  getSubscriptionStatusApiUrl,
+  getRisePlayerProfessionalAuthorizationApiUrl
 };
