@@ -18,6 +18,15 @@ function save() {
   return platform.writeTextFile(path, text);
 }
 
+function saveAndReport() {
+  return module.exports.save()
+  .catch(() => {
+    // const path = config.getCachePath();
+
+    // return logger.error(error.stack, `File write error: ${path}`);
+  })
+}
+
 function retrieve() {
   const path = config.getCachePath();
 
@@ -43,4 +52,4 @@ function retrieve() {
   return Promise.resolve(EMPTY_CONTENTS);
 }
 
-module.exports = {retrieve, save};
+module.exports = {retrieve, save, saveAndReport};

@@ -5,6 +5,7 @@ const simple = require("simple-mock");
 
 const logger = require("../../src/logger");
 const iterations = require("../../src/deprecated_widget_api_iterations");
+const persistence = require("../../src/persistence");
 const subscriptions = require("../../src/subscriptions");
 
 const FIVE_MINUTES = 5 * 60 * 1000;
@@ -19,6 +20,7 @@ describe("Deprecated Widget API Iterations - Unit", ()=>
     simple.mock(logger, "logDeprecatedWidgetAPICallError").resolveWith({});
     simple.mock(logger, "file").returnWith();
     simple.mock(logger, "all").returnWith();
+    simple.mock(persistence, "save").resolveWith(true);
   });
 
   afterEach(()=> {

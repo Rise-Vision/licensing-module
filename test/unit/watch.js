@@ -111,6 +111,7 @@ describe("Watch - Unit", ()=> {
     simple.mock(platform, "fileExists").returnWith(true);
     simple.mock(iterations, "ensureLicensingLoopIsRunning").resolveWith(true);
     simple.mock(persistence, "save").resolveWith(true);
+    simple.mock(persistence, "saveAndReport").resolveWith(true);
   });
 
   afterEach(()=> {

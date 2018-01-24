@@ -4,6 +4,7 @@
 // This will disappear as soon as Apps Display Licensing is available so code was copied from iterations.js with no special effort to refactor common functionality.
 
 const logger = require("./logger");
+const persistence = require("./persistence");
 const subscriptions = require("./subscriptions");
 
 const MINUTES = 60 * 1000;
@@ -18,6 +19,7 @@ function ensureLicensingLoopIsRunning(schedule = setInterval) {
   if (!timerId) {
     return subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast()
     .then(() => programLicensingDataUpdate(schedule, EACH_DAY))
+    .then(persistence.saveAndReport)
     .catch(error =>
       logger.logDeprecatedWidgetAPICallError(error, true)
       .then(() => programLicensingDataLoadingRetries(schedule))
@@ -32,6 +34,7 @@ function programLicensingDataUpdate(schedule, interval) {
 
   timerId = schedule(() => {
     return subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast()
+    .then(persistence.saveAndReport)
     .catch(logger.logDeprecatedWidgetAPICallError);
   }, interval);
 }
@@ -57,6 +60,7 @@ function retryLicensingDataLoad(schedule) {
     // switch to normal reporting
     programLicensingDataUpdate(schedule, EACH_DAY)
   })
+  .then(persistence.saveAndReport)
   .catch(error => {
     retryCounts += 1;
 
