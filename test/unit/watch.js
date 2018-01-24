@@ -143,9 +143,7 @@ describe("Watch - Unit", ()=> {
     })
     .then(() => {
       // so WATCH messages should have been sent for both screen-control.txt and content.json files
-      console.log(1)
       assert(messaging.broadcastMessage.called);
-      console.log(2)
       assert.equal(1, messaging.broadcastMessage.callCount);
 
       const event = messaging.broadcastMessage.lastCall.args[0];

@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-/* eslint-disable max-statements, no-magic-numbers, function-paren-newline */
+/* eslint-disable max-statements, no-magic-numbers, function-paren-newline, space-infix-ops */
 const assert = require("assert");
 const common = require("common-display-module");
 const messaging = require("common-display-module/messaging");
@@ -116,10 +116,16 @@ describe("Licensing - Integration", ()=>
     simple.mock(messaging, "getClientList").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(common, "getModuleVersion").returnWith("1.1");
+    simple.mock(common, "getInstallDir").returnWith("/home/rise/rvplayer");
     simple.mock(persistence, "save").resolveWith(true);
     simple.mock(platform, "fileExists").returnWith(true);
-    simple.mock(platform, "readTextFile").resolveWith(content);
     simple.mock(Date, "now").returnWith(100);
+
+    simple.mock(platform, "readTextFile").callFn(path => {
+      return Promise.resolve(
+        path.endsWith('/licensing-cache.json')? '{}' : content
+      );
+    });
 
     simple.mock(logger, "file").returnWith();
     simple.mock(logger, "all").returnWith();
@@ -194,7 +200,7 @@ describe("Licensing - Integration", ()=>
     licensing.run((action, interval) => {
       assert.equal(interval, ONE_DAY);
 
-      assert(messaging.broadcastMessage.callCount, 1);
+      assert.equal(messaging.broadcastMessage.callCount, 1);
 
       {
         const event = messaging.broadcastMessage.lastCall.args[0];
@@ -217,7 +223,7 @@ describe("Licensing - Integration", ()=>
       }
 
       action().then(() => {
-        assert(messaging.broadcastMessage.callCount, 2);
+        assert.equal(messaging.broadcastMessage.callCount, 2);
 
         const event = messaging.broadcastMessage.lastCall.args[0];
 
@@ -241,13 +247,13 @@ describe("Licensing - Integration", ()=>
       })
       .then(() => {
         // no more broadcasts
-        assert(messaging.broadcastMessage.callCount, 2);
+        assert.equal(messaging.broadcastMessage.callCount, 2);
 
         return eventHandler({topic: "licensing-request"});
       })
       .then(() => {
         // forced broadcast, same event as current.
-        assert(messaging.broadcastMessage.callCount, 3);
+        assert.equal(messaging.broadcastMessage.callCount, 3);
 
         const event = messaging.broadcastMessage.lastCall.args[0];
 

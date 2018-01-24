@@ -16,7 +16,7 @@ function clearMessageAlreadySentFlag() {
 }
 
 function startWatchIfLocalStorageModuleIsAvailable(message) {
-  if (!watchMessageAlreadySent) {
+  if (!watchMessageAlreadySent && !config.getCompanyId()) {
     logger.debug(JSON.stringify(message));
 
     const clients = message.clients;
@@ -51,10 +51,7 @@ function loadCompanyIdFromContent(data, schedule) {
   if (json.content && json.content.schedule && json.content.schedule.companyId) {
     const companyId = json.content.schedule.companyId;
 
-    logger.file(`Setting company id as ${companyId}`);
-    config.setCompanyId(companyId);
-
-    return iterations.ensureLicensingLoopIsRunning(schedule)
+    return iterations.configureAndStart(companyId, null, schedule)
     .then(persistence.save);
   }
 

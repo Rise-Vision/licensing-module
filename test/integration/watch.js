@@ -4,6 +4,7 @@ const assert = require("assert");
 const common = require("common-display-module");
 const messaging = require("common-display-module/messaging");
 const simple = require("simple-mock");
+const platform = require("rise-common-electron").platform;
 
 const licensing = require("../../src/index");
 const logger = require("../../src/logger");
@@ -18,6 +19,9 @@ describe("Watch - Integration", ()=>
     simple.mock(messaging, "broadcastMessage").returnWith();
     simple.mock(messaging, "getClientList").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
+    simple.mock(common, "getModuleVersion").returnWith("1.1");
+    simple.mock(common, "getInstallDir").returnWith("/home/rise/rvplayer");
+    simple.mock(platform, "fileExists").returnWith(false);
     simple.mock(logger, "file").returnWith();
     simple.mock(logger, "all").returnWith();
   });

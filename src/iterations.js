@@ -2,6 +2,7 @@
 
 // Iteration loop, separated to facilitate integration tests
 
+const config = require("./config");
 const logger = require("./logger");
 const subscriptions = require("./subscriptions");
 
@@ -24,6 +25,19 @@ function ensureLicensingLoopIsRunning(schedule = setInterval) {
   }
 
   return Promise.resolve();
+}
+
+function configureAndStart(companyId, initialLicensingData, schedule) {
+  logger.file(`Setting company id as ${companyId}`);
+  config.setCompanyId(companyId);
+
+  if (initialLicensingData && Object.keys(initialLicensingData).length > 0) {
+    subscriptions.init(initialLicensingData);
+
+    subscriptions.broadcastSubscriptionData();
+  }
+
+  return module.exports.ensureLicensingLoopIsRunning(schedule);
 }
 
 function programLicensingDataUpdate(schedule, interval) {
@@ -73,4 +87,4 @@ function stop() {
   }
 }
 
-module.exports = {ensureLicensingLoopIsRunning, stop};
+module.exports = {configureAndStart, ensureLicensingLoopIsRunning, stop};

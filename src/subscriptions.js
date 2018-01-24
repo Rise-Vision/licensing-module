@@ -7,6 +7,10 @@ const logger = require("./logger");
 
 let currentSubscriptionStatusTable = {};
 
+function init(data) {
+  currentSubscriptionStatusTable = data;
+}
+
 function isSubscriptionDataChanged(current, updated) {
   const currentKeys = Object.keys(current);
   const updatedKeys = Object.keys(updated);
@@ -51,6 +55,7 @@ function clear() {
 }
 
 module.exports = {
+  init,
   broadcastSubscriptionData,
   getSubscriptionData,
   isSubscriptionDataChanged,
