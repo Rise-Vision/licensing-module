@@ -82,7 +82,7 @@ describe("Persistence - Unit", ()=>
     });
   });
 
-  it("should retrieve licensing data", () => {
+  it("should retrieve licensing data from cache file", () => {
     simple.mock(platform, "fileExists").returnWith(true);
 
     simple.mock(platform, "readTextFile").resolveWith(`
@@ -114,7 +114,7 @@ describe("Persistence - Unit", ()=>
     });
   });
 
-  it("should retrieve empty data if file is corrupted and log error", () => {
+  it("should retrieve empty data if cache file is corrupted and log error", () => {
     simple.mock(platform, "fileExists").returnWith(true);
     simple.mock(logger, "file").returnWith();
 
@@ -138,6 +138,35 @@ describe("Persistence - Unit", ()=>
 
       const message = logger.file.lastCall.args[1];
       assert(message.startsWith('Illegal JSON content'));
+    });
+  });
+
+  it("should retrieve empty data if cache file does not exist", () => {
+    simple.mock(platform, "fileExists").returnWith(false);
+    simple.mock(logger, "file").returnWith();
+
+    return persistence.retrieve().then(data => {
+      assert.deepEqual(data, {companyId: null, licensing: {}});
+
+      // no error
+      assert(!logger.file.called);
+    });
+  });
+
+  it("should retrieve empty data if cache file read fails", () => {
+    simple.mock(platform, "fileExists").returnWith(true);
+    simple.mock(logger, "file").returnWith();
+
+    simple.mock(platform, "readTextFile").rejectWith(new Error("failed"));
+
+    return persistence.retrieve().then(data => {
+      assert.deepEqual(data, {companyId: null, licensing: {}});
+
+      assert(logger.file.called);
+      assert.equal(logger.file.callCount, 1);
+
+      const message = logger.file.lastCall.args[1];
+      assert.equal(message, "File read error: /home/rise/rvplayer/modules/licensing/1.1/licensing-cache.json");
     });
   });
 
