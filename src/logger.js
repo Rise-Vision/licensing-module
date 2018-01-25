@@ -39,7 +39,17 @@ function logSubscriptionAPICallError(err, remote = true) {
   const url = getSubscriptionStatusApiUrl();
   const userFriendlyMessage = `Subscription Status API Call failed: ${url}`;
 
-  const call = remote ? error : module.exports.file;
+  const call = remote ? module.exports.error : module.exports.file;
+
+  return call(detail, userFriendlyMessage);
+}
+
+// Will disappear when Apps Display Licensing is available.
+function logDeprecatedWidgetAPICallError(err, remote = true) {
+  const detail = err.stack;
+  const userFriendlyMessage = 'Deprecated Widget Status API Call failed';
+
+  const call = remote ? module.exports.error : module.exports.file;
 
   return call(detail, userFriendlyMessage);
 }
@@ -50,5 +60,6 @@ module.exports = {
   error,
   external,
   all,
-  logSubscriptionAPICallError
+  logSubscriptionAPICallError,
+  logDeprecatedWidgetAPICallError
 };

@@ -2,6 +2,7 @@
 /* eslint-disable max-statements, no-magic-numbers */
 const assert = require("assert");
 const simple = require("simple-mock");
+const common = require("common-display-module");
 
 const config = require("../../src/config");
 const store = require("../../src/store");
@@ -11,8 +12,12 @@ describe("Store - Unit", ()=>
 
   beforeEach(()=>
   {
+    const settings = {displayid: "DIS123"};
+
     config.setCompanyId("123");
+
     simple.mock(Date, "now").returnWith(100);
+    simple.mock(common, "getDisplaySettings").resolveWith(settings);
   });
 
   afterEach(()=> {
@@ -32,7 +37,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {
@@ -55,7 +60,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {
@@ -78,7 +83,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {
@@ -101,7 +106,7 @@ describe("Store - Unit", ()=>
         ]
       });
 
-      return store.getSubscriptionStatusTable()
+      return store.getSubscriptionStatusUpdates()
       .then(table =>
       {
         assert.deepEqual(table, {
@@ -124,7 +129,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {
@@ -147,7 +152,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {
@@ -170,7 +175,7 @@ describe("Store - Unit", ()=>
       ]
     });
 
-    return store.getSubscriptionStatusTable()
+    return store.getSubscriptionStatusUpdates()
     .then(table =>
     {
       assert.deepEqual(table, {
@@ -179,6 +184,34 @@ describe("Store - Unit", ()=>
         }
       })
     })
+  });
+
+  it("should return active RisePlayerProfessional", () => {
+    simple.mock(store, "fetchRisePlayerProfessionalAuthorization").resolveWith({
+      body: {
+        authorized: true,
+        expiry: '2018-01-25T16:47:42.042+0000',
+        signatures: null,
+        error: null
+      }
+    });
+
+    return store.getRisePlayerProfessionalAuthorization()
+    .then(authorized => assert(authorized))
+  });
+
+  it("should return not active RisePlayerProfessional", () => {
+    simple.mock(store, "fetchRisePlayerProfessionalAuthorization").resolveWith({
+      body: {
+        authorized: false,
+        expiry: '2018-01-25T16:47:42.042+0000',
+        signatures: null,
+        error: null
+      }
+    });
+
+    return store.getRisePlayerProfessionalAuthorization()
+    .then(authorized => assert(!authorized))
   });
 
 });

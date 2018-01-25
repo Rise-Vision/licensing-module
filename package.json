@@ -37,7 +37,7 @@
     "zip-webpack-plugin": "^2.0.0"
   },
   "dependencies": {
-    "common-display-module": "git://github.com/Rise-Vision/common-display-module.git#v2.5.0",
+    "common-display-module": "git://github.com/Rise-Vision/common-display-module.git#v3.0.0",
     "rise-common-electron": "git+https://github.com/Rise-Vision/rise-common-electron.git#v2.2.5"
   }
 }

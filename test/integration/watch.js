@@ -2,11 +2,17 @@
 /* eslint-disable max-statements, global-require, no-magic-numbers */
 const assert = require("assert");
 const common = require("common-display-module");
+const messaging = require("common-display-module/messaging");
 const simple = require("simple-mock");
+const platform = require("rise-common-electron").platform;
 
+const config = require("../../src/config");
 const licensing = require("../../src/index");
 const logger = require("../../src/logger");
+const iterations = require("../../src/iterations");
+const subscriptions = require("../../src/subscriptions");
 const watch = require("../../src/watch");
+const deprecatedIterations = require("../../src/deprecated_widget_api_iterations");
 
 describe("Watch - Integration", ()=>
 {
@@ -14,16 +20,24 @@ describe("Watch - Integration", ()=>
   beforeEach(() => {
     const settings = {displayid: "DIS123"};
 
-    simple.mock(common, "broadcastMessage").returnWith();
-    simple.mock(common, "getClientList").returnWith();
+    simple.mock(messaging, "broadcastMessage").returnWith();
+    simple.mock(messaging, "getClientList").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
+    simple.mock(common, "getModuleVersion").returnWith("1.1");
+    simple.mock(common, "getInstallDir").returnWith("/home/rise/rvplayer");
+    simple.mock(platform, "fileExists").returnWith(false);
     simple.mock(logger, "file").returnWith();
     simple.mock(logger, "all").returnWith();
+    simple.mock(deprecatedIterations, "ensureLicensingLoopIsRunning").resolveWith(true);
   });
 
   afterEach(() => {
     simple.restore()
     watch.clearMessageAlreadySentFlag();
+    config.setCompanyId(null);
+    iterations.stop();
+    deprecatedIterations.stop();
+    subscriptions.clear();
   });
 
   it("should wait for local-storage to be available to send WATCH messages", done => {
@@ -34,8 +48,8 @@ describe("Watch - Integration", ()=>
         .then(() =>
         {
           // no clients, getClientList() should have been called, but no WATCH
-          assert.equal(common.getClientList.callCount, 1);
-          assert.equal(common.broadcastMessage.callCount, 0);
+          assert.equal(messaging.getClientList.callCount, 1);
+          assert.equal(messaging.broadcastMessage.callCount, 0);
 
           // other non-local-storage clients
           return handler({
@@ -46,7 +60,7 @@ describe("Watch - Integration", ()=>
         .then(() =>
         {
           // so WATCH message shouldn't have been sent
-          assert.equal(common.broadcastMessage.callCount, 0);
+          assert.equal(messaging.broadcastMessage.callCount, 0);
 
           // now local-storage is present
           return handler({
@@ -57,10 +71,10 @@ describe("Watch - Integration", ()=>
         .then(() =>
         {
           // so WATCH message should have been sent
-          assert.equal(common.broadcastMessage.callCount, 1);
+          assert.equal(messaging.broadcastMessage.callCount, 1);
 
           // this is the request for content.json
-          const event = common.broadcastMessage.lastCall.args[0];
+          const event = messaging.broadcastMessage.lastCall.args[0];
 
           assert(event);
           // check we sent it
@@ -81,9 +95,9 @@ describe("Watch - Integration", ()=>
       }
     }
 
-    simple.mock(common, "receiveMessages").resolveWith(new Receiver());
+    simple.mock(messaging, "receiveMessages").resolveWith(new Receiver());
 
-    licensing.run(() => {});
+    licensing.run(() => {}, () => {});
   });
 
 });

@@ -1,20 +1,37 @@
 /* eslint-env mocha */
 /* eslint-disable max-statements */
 const assert = require("assert");
+const simple = require("simple-mock");
+const common = require("common-display-module");
 
 const config = require("../../src/config");
 
 describe("Config - Unit", ()=>
 {
 
-  afterEach(() => config.setCompanyId(null));
+  beforeEach(()=>
+  {
+    simple.mock(common, "getModuleVersion").returnWith("1.1");
+    simple.mock(common, "getInstallDir").returnWith("/home/rise/rvplayer");
+  });
 
-  it("Construct Subscription API URL", () => {
+  afterEach(() => {
+    simple.restore();
+    config.setCompanyId(null);
+  });
+
+  it("Build Subscription API URL", () => {
     config.setCompanyId('123');
 
     const url = config.getSubscriptionStatusApiUrl();
 
-    assert.equal(url, 'https://store-dot-rvaserver2.appspot.com/v1/company/123/product/status?pc=c4b368be86245bf9501baaa6e0b00df9719869fd,b0cba08a4baa0c62b8cdc621b6f6a124f89a03db');
+    assert.equal(url, 'https://store-dot-rvaserver2.appspot.com/v1/company/123/product/status?pc=b0cba08a4baa0c62b8cdc621b6f6a124f89a03db');
+  });
+
+  it("Build cache path", () => {
+    const path = config.getCachePath();
+
+    assert.equal(path, "/home/rise/rvplayer/modules/licensing/1.1/licensing-cache.json");
   });
 
   it("Fail on creating Subscription API URL if company id is not set", () => {

@@ -1,8 +1,8 @@
 /* eslint-disable no-magic-numbers, line-comment-position, no-inline-comments, function-paren-newline */
 
-// Iteration loop, separated to facilitate integration tests
+// Iteration loop for deprecated widget API.
+// This will disappear as soon as Apps Display Licensing is available so code was copied from iterations.js with no special effort to refactor common functionality.
 
-const config = require("./config");
 const logger = require("./logger");
 const subscriptions = require("./subscriptions");
 
@@ -16,10 +16,10 @@ let retryCounts = 0;
 
 function ensureLicensingLoopIsRunning(schedule = setInterval) {
   if (!timerId) {
-    return subscriptions.loadSubscriptionApiDataAndBroadcast()
+    return subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast()
     .then(() => programLicensingDataUpdate(schedule, EACH_DAY))
     .catch(error =>
-      logger.logSubscriptionAPICallError(error, true)
+      logger.logDeprecatedWidgetAPICallError(error, true)
       .then(() => programLicensingDataLoadingRetries(schedule))
     );
   }
@@ -27,25 +27,12 @@ function ensureLicensingLoopIsRunning(schedule = setInterval) {
   return Promise.resolve();
 }
 
-function configureAndStart(companyId, initialLicensingData, schedule) {
-  logger.file(`Setting company id as ${companyId}`);
-  config.setCompanyId(companyId);
-
-  if (initialLicensingData && Object.keys(initialLicensingData).length > 0) {
-    subscriptions.init(initialLicensingData);
-
-    subscriptions.broadcastSubscriptionData();
-  }
-
-  return module.exports.ensureLicensingLoopIsRunning(schedule);
-}
-
 function programLicensingDataUpdate(schedule, interval) {
   stop();
 
   timerId = schedule(() => {
-    return subscriptions.loadSubscriptionApiDataAndBroadcast()
-    .catch(logger.logSubscriptionAPICallError);
+    return subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast()
+    .catch(logger.logDeprecatedWidgetAPICallError);
   }, interval);
 }
 
@@ -63,9 +50,9 @@ function programLicensingDataLoadingRetries(schedule) {
 }
 
 function retryLicensingDataLoad(schedule) {
-  return subscriptions.loadSubscriptionApiDataAndBroadcast()
+  return subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast()
   .then(() => {
-    logger.all('api_call_successful_retry');
+    logger.all('watch_api_call_successful_retry');
 
     // switch to normal reporting
     programLicensingDataUpdate(schedule, EACH_DAY)
@@ -74,7 +61,7 @@ function retryLicensingDataLoad(schedule) {
     retryCounts += 1;
 
     // log the error locally, as this is a retry
-    return logger.logSubscriptionAPICallError(error, false);
+    return logger.logDeprecatedWidgetAPICallError(error, false);
   });
 }
 
@@ -87,4 +74,4 @@ function stop() {
   }
 }
 
-module.exports = {configureAndStart, ensureLicensingLoopIsRunning, stop};
+module.exports = {ensureLicensingLoopIsRunning, stop};

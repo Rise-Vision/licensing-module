@@ -1,9 +1,12 @@
 /* eslint-disable function-paren-newline */
 
 const common = require("common-display-module");
+const messaging = require("common-display-module/messaging");
 const config = require("./config");
 const iterations = require("./iterations");
 const logger = require("./logger");
+const persistence = require("./persistence");
+const subscriptions = require("./subscriptions");
 const platform = require("rise-common-electron").platform;
 
 // So we ensure it will only be sent once.
@@ -14,13 +17,13 @@ function clearMessageAlreadySentFlag() {
 }
 
 function startWatchIfLocalStorageModuleIsAvailable(message) {
-  if (!watchMessageAlreadySent) {
+  if (!watchMessageAlreadySent && !config.getCompanyId()) {
     logger.debug(JSON.stringify(message));
 
     const clients = message.clients;
 
     if (clients.includes("local-storage")) {
-      return sendWatchMessage()
+      return module.exports.sendWatchMessage()
       .then(() => watchMessageAlreadySent = true)
       .catch(error =>
         logger.file(error.stack, 'Error while sending watch message')
@@ -28,13 +31,13 @@ function startWatchIfLocalStorageModuleIsAvailable(message) {
     }
   }
 
-  return Promise.resolve()
+  return Promise.resolve();
 }
 
 function sendWatchMessage() {
   return common.getDisplayId()
   .then(displayId =>
-    common.broadcastMessage({
+    messaging.broadcastMessage({
       from: config.moduleName,
       topic: "watch",
       filePath: `risevision-display-notifications/${displayId}/content.json`
@@ -49,14 +52,11 @@ function loadCompanyIdFromContent(data, schedule) {
   if (json.content && json.content.schedule && json.content.schedule.companyId) {
     const companyId = json.content.schedule.companyId;
 
-    logger.file(`Setting company id as ${companyId}`);
-    config.setCompanyId(companyId);
+    return iterations.configureAndStart(companyId, null, schedule)
+    .then(() => persistence.save(subscriptions.getSubscriptionData()));
+  }
 
-    iterations.ensureLicensingLoopIsRunning(schedule);
-  }
-  else {
-    logger.error(`Company id could not be retrieved from content: ${data}`);
-  }
+  return logger.error(`Company id could not be retrieved from content: ${data}`);
 }
 
 function receiveContentFile(message, schedule = setInterval) {
@@ -70,9 +70,9 @@ function receiveContentFile(message, schedule = setInterval) {
     return platform.readTextFile(path)
     .then(data => {
       try {
-        loadCompanyIdFromContent(data, schedule);
+        return loadCompanyIdFromContent(data, schedule);
       } catch (error) {
-        logger.error(error.stack, `Could not parse content file ${path}`);
+        return logger.error(error.stack, `Could not parse content file ${path}`);
       }
     })
     .catch(error =>
@@ -84,5 +84,6 @@ function receiveContentFile(message, schedule = setInterval) {
 module.exports = {
   startWatchIfLocalStorageModuleIsAvailable,
   clearMessageAlreadySentFlag,
-  receiveContentFile
+  receiveContentFile,
+  sendWatchMessage
 };

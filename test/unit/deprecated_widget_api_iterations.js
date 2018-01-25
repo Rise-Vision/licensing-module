@@ -3,9 +3,8 @@
 const assert = require("assert");
 const simple = require("simple-mock");
 
-const config = require("../../src/config");
 const logger = require("../../src/logger");
-const iterations = require("../../src/iterations");
+const iterations = require("../../src/deprecated_widget_api_iterations");
 const persistence = require("../../src/persistence");
 const subscriptions = require("../../src/subscriptions");
 
@@ -13,14 +12,12 @@ const FIVE_MINUTES = 5 * 60 * 1000;
 const ONE_HOUR = 60 * 60 * 1000;
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
-describe("Iterations - Unit", ()=>
+describe("Deprecated Widget API Iterations - Unit", ()=>
 {
 
   beforeEach(()=>
   {
-    config.setCompanyId('123');
-
-    simple.mock(logger, "logSubscriptionAPICallError").resolveWith({});
+    simple.mock(logger, "logDeprecatedWidgetAPICallError").resolveWith({});
     simple.mock(logger, "file").returnWith();
     simple.mock(logger, "all").returnWith();
     simple.mock(persistence, "save").resolveWith(true);
@@ -28,20 +25,19 @@ describe("Iterations - Unit", ()=>
 
   afterEach(()=> {
     simple.restore()
-    config.setCompanyId(null);
     iterations.stop();
   });
 
   it("should program updates if service call succeeds", done => {
-    simple.mock(subscriptions, "loadSubscriptionApiDataAndBroadcast").resolveWith();
+    simple.mock(subscriptions, "loadRisePlayerProfessionalAuthorizationAndBroadcast").resolveWith();
 
     iterations.ensureLicensingLoopIsRunning((action, interval) => {
       assert.equal(interval, ONE_DAY);
-      assert(subscriptions.loadSubscriptionApiDataAndBroadcast.callCount, 1);
+      assert(subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast.callCount, 1);
 
       action()
       .then(() => {
-        assert(subscriptions.loadSubscriptionApiDataAndBroadcast.callCount, 2);
+        assert(subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast.callCount, 2);
 
         done();
       });
@@ -52,7 +48,7 @@ describe("Iterations - Unit", ()=>
     let loadCounter = 0;
     let state = 0;
 
-    simple.mock(subscriptions, "loadSubscriptionApiDataAndBroadcast").callFn(() => {
+    simple.mock(subscriptions, "loadRisePlayerProfessionalAuthorizationAndBroadcast").callFn(() => {
       if (loadCounter === 0) {
         loadCounter += 1;
 
@@ -67,12 +63,12 @@ describe("Iterations - Unit", ()=>
         state = 1;
 
         assert.equal(interval, FIVE_MINUTES);
-        assert(subscriptions.loadSubscriptionApiDataAndBroadcast.callCount, 1);
+        assert(subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast.callCount, 1);
 
-        assert(logger.logSubscriptionAPICallError.called);
-        assert.equal(logger.logSubscriptionAPICallError.callCount, 1);
+        assert(logger.logDeprecatedWidgetAPICallError.called);
+        assert.equal(logger.logDeprecatedWidgetAPICallError.callCount, 1);
 
-        const call = logger.logSubscriptionAPICallError.lastCall;
+        const call = logger.logDeprecatedWidgetAPICallError.lastCall;
 
         assert(call.args[0]);
         assert.equal(call.args[1], true); // remote call
@@ -80,10 +76,10 @@ describe("Iterations - Unit", ()=>
         action();
       } else {
         assert.equal(interval, ONE_DAY);
-        assert(subscriptions.loadSubscriptionApiDataAndBroadcast.callCount, 2);
+        assert(subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast.callCount, 2);
 
         // error did not repeat
-        assert.equal(logger.logSubscriptionAPICallError.callCount, 1);
+        assert.equal(logger.logDeprecatedWidgetAPICallError.callCount, 1);
 
         done();
       }
@@ -94,7 +90,7 @@ describe("Iterations - Unit", ()=>
     let loadCounter = 0;
     let state = 0;
 
-    simple.mock(subscriptions, "loadSubscriptionApiDataAndBroadcast").callFn(() => {
+    simple.mock(subscriptions, "loadRisePlayerProfessionalAuthorizationAndBroadcast").callFn(() => {
       // reject the first 25 requests
       if (loadCounter < 25) {
         loadCounter += 1;
@@ -110,12 +106,12 @@ describe("Iterations - Unit", ()=>
         state = 1;
 
         assert.equal(interval, FIVE_MINUTES);
-        assert(subscriptions.loadSubscriptionApiDataAndBroadcast.callCount, 1);
+        assert(subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast.callCount, 1);
 
-        assert(logger.logSubscriptionAPICallError.called);
-        assert.equal(logger.logSubscriptionAPICallError.callCount, 1);
+        assert(logger.logDeprecatedWidgetAPICallError.called);
+        assert.equal(logger.logDeprecatedWidgetAPICallError.callCount, 1);
 
-        const call = logger.logSubscriptionAPICallError.lastCall;
+        const call = logger.logDeprecatedWidgetAPICallError.lastCall;
 
         assert(call.args[0]);
         assert.equal(call.args[1], true); // remote only first call
@@ -127,13 +123,13 @@ describe("Iterations - Unit", ()=>
         state = 2;
 
         assert.equal(interval, ONE_HOUR);
-        assert(subscriptions.loadSubscriptionApiDataAndBroadcast.callCount, 12);
+        assert(subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast.callCount, 12);
         assert.equal(logger.all.called, false);
 
-        assert(logger.logSubscriptionAPICallError.called);
-        assert.equal(logger.logSubscriptionAPICallError.callCount, 12);
+        assert(logger.logDeprecatedWidgetAPICallError.called);
+        assert.equal(logger.logDeprecatedWidgetAPICallError.callCount, 12);
 
-        const call = logger.logSubscriptionAPICallError.lastCall;
+        const call = logger.logDeprecatedWidgetAPICallError.lastCall;
 
         assert(call.args[0]);
         assert.equal(call.args[1], false); // local call
@@ -144,12 +140,12 @@ describe("Iterations - Unit", ()=>
       } else {
         // it finally answered !
         assert.equal(interval, ONE_DAY);
-        assert(subscriptions.loadSubscriptionApiDataAndBroadcast.callCount, 25);
+        assert(subscriptions.loadRisePlayerProfessionalAuthorizationAndBroadcast.callCount, 25);
 
-        assert.equal(logger.logSubscriptionAPICallError.callCount, 25);
+        assert.equal(logger.logDeprecatedWidgetAPICallError.callCount, 25);
 
         assert.equal(logger.all.callCount, 1);
-        assert.equal(logger.all.lastCall.args[0], 'api_call_successful_retry');
+        assert.equal(logger.all.lastCall.args[0], 'watch_api_call_successful_retry');
 
         done();
       }

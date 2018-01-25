@@ -3,11 +3,13 @@
 const assert = require("assert");
 const logger = require("../../src/logger");
 const common = require("common-display-module");
+const messaging = require("common-display-module/messaging");
 const simple = require("simple-mock");
 const platform = require("rise-common-electron").platform;
 
 const config = require("../../src/config");
 const iterations = require("../../src/iterations");
+const persistence = require("../../src/persistence");
 const watch = require("../../src/watch");
 
 const mockContent = `
@@ -103,11 +105,13 @@ describe("Watch - Unit", ()=> {
   beforeEach(()=> {
     const settings = {displayid: "DIS123"};
 
-    simple.mock(common, "broadcastMessage").returnWith();
+    simple.mock(messaging, "broadcastMessage").returnWith();
     simple.mock(logger, "error").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(platform, "fileExists").returnWith(true);
-    simple.mock(iterations, "ensureLicensingLoopIsRunning").returnWith();
+    simple.mock(iterations, "ensureLicensingLoopIsRunning").resolveWith(true);
+    simple.mock(persistence, "save").resolveWith(true);
+    simple.mock(persistence, "saveAndReport").resolveWith(true);
   });
 
   afterEach(()=> {
@@ -116,48 +120,34 @@ describe("Watch - Unit", ()=> {
     simple.restore()
   });
 
-  it("should not send WATCH messages if no module is available", done => {
-    watch.startWatchIfLocalStorageModuleIsAvailable({clients: []})
+  it("should not send WATCH messages if no module is available", () => {
+    return watch.startWatchIfLocalStorageModuleIsAvailable({clients: []})
     .then(() => {
       // no clients, so WATCH messages shouldn't have been sent
-      assert(!common.broadcastMessage.called);
-
-      done();
+      assert(!messaging.broadcastMessage.called);
     })
-    .catch(error => {
-      assert.fail(error)
-
-      done()
-    });
   });
 
-  it("should not send WATCH messages if local-storage module is not available", done => {
-    watch.startWatchIfLocalStorageModuleIsAvailable({
+  it("should not send WATCH messages if local-storage module is not available", () => {
+    return watch.startWatchIfLocalStorageModuleIsAvailable({
       clients: ["logging", "system-metrics"]
     })
     .then(() => {
       // so WATCH messages shouldn't have been sent
-      assert(!common.broadcastMessage.called);
-
-      done();
-    })
-    .catch(error => {
-      assert.fail(error)
-
-      done()
+      assert(!messaging.broadcastMessage.called);
     });
   });
 
-  it("should send WATCH messages if local-storage module is available", done => {
-    watch.startWatchIfLocalStorageModuleIsAvailable({
+  it("should send WATCH messages if local-storage module is available", () => {
+    return watch.startWatchIfLocalStorageModuleIsAvailable({
       clients: ["logging", "system-metrics", "local-storage"]
     })
     .then(() => {
       // so WATCH messages should have been sent for both screen-control.txt and content.json files
-      assert(common.broadcastMessage.called);
-      assert.equal(1, common.broadcastMessage.callCount);
+      assert(messaging.broadcastMessage.called);
+      assert.equal(1, messaging.broadcastMessage.callCount);
 
-      const event = common.broadcastMessage.lastCall.args[0];
+      const event = messaging.broadcastMessage.lastCall.args[0];
 
       assert(event);
       // check we sent it
@@ -166,13 +156,6 @@ describe("Watch - Unit", ()=> {
       assert.equal(event.topic, "watch");
       // check the URL of the file.
       assert.equal(event.filePath, "risevision-display-notifications/DIS123/content.json");
-
-      done();
-    })
-    .catch(error => {
-      assert.fail(error)
-
-      done()
     });
   });
 
@@ -186,6 +169,8 @@ describe("Watch - Unit", ()=> {
     })
     .then(() => {
       assert.deepEqual(config.getCompanyId(), '176314ee-6b88-47ed-a354-10659722dc39');
+
+      assert(persistence.save.called);
     });
   });
 
@@ -200,6 +185,8 @@ describe("Watch - Unit", ()=> {
     })
     .then(() => {
       assert(logger.error.lastCall.args[1].startsWith("Could not parse"));
+
+      assert(!persistence.save.called);
     });
   });
 
@@ -214,6 +201,8 @@ describe("Watch - Unit", ()=> {
     })
     .then(() => {
       assert(logger.error.lastCall.args[0].startsWith("Company id could not be retrieved from content"));
+
+      assert(!persistence.save.called);
     });
   });
 });
