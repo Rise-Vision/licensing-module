@@ -52,7 +52,7 @@ function loadCompanyIdFromContent(data, schedule) {
   if (json.content && json.content.schedule && json.content.schedule.companyId) {
     const companyId = json.content.schedule.companyId;
 
-    return iterations.configureAndStart(companyId, null, schedule)
+    return iterations.configureAndStartIfCompanyIdIsAvailable(companyId, null, schedule)
     .then(() => persistence.save(subscriptions.getSubscriptionData()));
   }
 

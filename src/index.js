@@ -11,14 +11,6 @@ const deprecatedIterations = require("./deprecated_widget_api_iterations");
 
 const displayConfigBucket = "risevision-display-notifications";
 
-function startSubscriptionApiRequestsIfCompanyIdIsAvailable(companyId, licensing, schedule) {
-  if (companyId) {
-    return iterations.configureAndStart(companyId, licensing, schedule);
-  }
-
-  return Promise.resolve();
-}
-
 function configureMessagingHandlers(receiver, schedule) {
   receiver.on("message", message => {
     switch (message.topic.toUpperCase()) {
@@ -48,7 +40,7 @@ function run(schedule = setInterval, scheduleDeprecated = setInterval) {
     const {companyId, licensing} = data;
 
     messaging.receiveMessages(config.moduleName).then(receiver =>
-      startSubscriptionApiRequestsIfCompanyIdIsAvailable(companyId, licensing, schedule)
+      iterations.configureAndStartIfCompanyIdIsAvailable(companyId, licensing, schedule)
       .then(() => deprecatedIterations.ensureLicensingLoopIsRunning(scheduleDeprecated))
       .then(() => configureMessagingHandlers(receiver, schedule))
       .catch(error =>
