@@ -30,7 +30,7 @@ describe("Deprecated Widget API Iterations - Integration", ()=>
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(common, "getModuleVersion").returnWith("1.1");
     simple.mock(common, "getInstallDir").returnWith("/home/rise/rvplayer");
-    simple.mock(iterations, "configureAndStart").resolveWith(true);
+    simple.mock(iterations, "configureAndStartIfCompanyIdIsAvailable").resolveWith(true);
     simple.mock(persistence, "save").resolveWith(true);
     simple.mock(platform, "fileExists").returnWith(true);
     simple.mock(watch, "startWatchIfLocalStorageModuleIsAvailable").resolveWith(true);
