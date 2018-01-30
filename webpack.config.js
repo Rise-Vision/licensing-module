@@ -1,4 +1,6 @@
+const webpack = require("webpack");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const CleanWebpackPlugin = require("clean-webpack-plugin");
 const MinifyPlugin = require("babel-minify-webpack-plugin");
 const path = require("path");
 const UnzipsfxPlugin = require("unzipsfx-webpack-plugin");
@@ -16,6 +18,8 @@ module.exports = {
     filename: "index.js"
   },
   plugins: [
+    new CleanWebpackPlugin(["build"]),
+    new webpack.IgnorePlugin(/vertx/),
     new CopyWebpackPlugin([{from: "package.json"}]),
     new MinifyPlugin(),
     new ZipPlugin({
@@ -26,5 +30,8 @@ module.exports = {
       outputPath: path.join(__dirname, "build"),
       outputFilename: "licensing"
     })
-  ]
+  ],
+  stats: {
+    warningsFilter: /bq-controller[\s\S]*dependency is an expression.*/
+  }
 };
