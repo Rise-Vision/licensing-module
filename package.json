@@ -4,7 +4,7 @@
   "description": "Licensing Module",
   "main": "src/index.js",
   "scripts": {
-    "build": "eslint src && webpack",
+    "build": "eslint src && webpack && ./post-build.sh",
     "test": "eslint test && eslint src && mocha -r test/mocha-env.js -t 20000 --recursive --exit test/unit/** test/integration/**",
     "test-unit": "eslint test && eslint src && mocha -r test/mocha-env.js -t 20000 --recursive --exit test/unit/**",
     "test-integration": "eslint test && eslint src && mocha -r test/mocha-env.js -t 20000 --recursive --exit test/integration/**"
