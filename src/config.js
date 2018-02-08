@@ -29,7 +29,7 @@ function getSubscriptionStatusApiUrl() {
 function getRisePlayerProfessionalAuthorizationApiUrl(displayId) {
   return `https://${SUBSCRIPTION_API_SERVER}/v1/widget/auth?id=${displayId}&pc=${
     licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE
-  }`;
+  }&startTrial=false`;
 }
 
 function getCachePath() {
