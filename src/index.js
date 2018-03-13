@@ -13,6 +13,7 @@ const displayConfigBucket = "risevision-display-notifications";
 
 function configureMessagingHandlers(receiver, schedule) {
   receiver.on("message", message => {
+    if (!message.topic) {return;}
     switch (message.topic.toUpperCase()) {
       case "CLIENT-LIST":
         return watch.startWatchIfLocalStorageModuleIsAvailable(message);
