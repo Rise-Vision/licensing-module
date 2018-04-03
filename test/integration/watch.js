@@ -12,7 +12,6 @@ const logger = require("../../src/logger");
 const iterations = require("../../src/iterations");
 const subscriptions = require("../../src/subscriptions");
 const watch = require("../../src/watch");
-const deprecatedIterations = require("../../src/deprecated_widget_api_iterations");
 
 describe("Watch - Integration", ()=>
 {
@@ -28,7 +27,6 @@ describe("Watch - Integration", ()=>
     simple.mock(platform, "fileExists").returnWith(false);
     simple.mock(logger, "file").returnWith();
     simple.mock(logger, "all").returnWith();
-    simple.mock(deprecatedIterations, "ensureLicensingLoopIsRunning").resolveWith(true);
   });
 
   afterEach(() => {
@@ -36,7 +34,6 @@ describe("Watch - Integration", ()=>
     watch.clearMessageAlreadySentFlag();
     config.setCompanyId(null);
     iterations.stop();
-    deprecatedIterations.stop();
     subscriptions.clear();
   });
 

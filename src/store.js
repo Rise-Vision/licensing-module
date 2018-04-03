@@ -35,23 +35,7 @@ function getSubscriptionStatusUpdates() {
   });
 }
 
-function fetchRisePlayerProfessionalAuthorization() {
-  return common.getDisplayId()
-  .then(displayId => {
-    const url = config.getRisePlayerProfessionalAuthorizationApiUrl(displayId);
-
-    return fetchJSON(url);
-  })
-}
-
-function getRisePlayerProfessionalAuthorization() {
-  return module.exports.fetchRisePlayerProfessionalAuthorization()
-  .then(response => response.body.authorized);
-}
-
 module.exports = {
   fetchSubscriptionStatus,
-  fetchRisePlayerProfessionalAuthorization,
-  getSubscriptionStatusUpdates,
-  getRisePlayerProfessionalAuthorization
+  getSubscriptionStatusUpdates
 };

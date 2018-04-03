@@ -1,6 +1,5 @@
 /* eslint-disable function-paren-new, function-paren-newline */
 const messaging = require("common-display-module/messaging");
-const licensing = require("common-display-module/licensing");
 
 const config = require("./config");
 const persistence = require("./persistence");
@@ -62,22 +61,6 @@ function loadSubscriptionApiDataAndBroadcast() {
   .then(applyStatusUpdates);
 }
 
-function loadRisePlayerProfessionalAuthorizationAndBroadcast() {
-  logger.debug("loading Rise Player Professional authorization");
-
-  // Currently the subscription status come only from store, but in future modules it may also come from the display's GCS bucket.
-  return store.getRisePlayerProfessionalAuthorization()
-  .then(active => {
-    const data = {
-      [licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE]: {
-        active, timestamp: Date.now()
-      }
-    };
-
-    return applyStatusUpdates(data);
-  })
-}
-
 // For testing purposes only
 function clear() {
   currentSubscriptionStatusTable = {};
@@ -89,6 +72,5 @@ module.exports = {
   getSubscriptionData,
   hasSubscriptionDataChanges,
   loadSubscriptionApiDataAndBroadcast,
-  loadRisePlayerProfessionalAuthorizationAndBroadcast,
   clear
 };

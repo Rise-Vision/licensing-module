@@ -7,7 +7,6 @@ const logger = require("./logger");
 const persistence = require("./persistence");
 const subscriptions = require("./subscriptions");
 const watch = require("./watch");
-const deprecatedIterations = require("./deprecated_widget_api_iterations");
 
 const displayConfigBucket = "risevision-display-notifications";
 
@@ -42,7 +41,6 @@ function run(schedule = setInterval, scheduleDeprecated = setInterval) {
 
     messaging.receiveMessages(config.moduleName).then(receiver =>
       iterations.configureAndStartIfCompanyIdIsAvailable(companyId, licensing, schedule)
-      .then(() => deprecatedIterations.ensureLicensingLoopIsRunning(scheduleDeprecated))
       .then(() => configureMessagingHandlers(receiver, schedule))
       .catch(error =>
         logger.file(error.stack, 'Unexpected error while configuring messaging handlers')
