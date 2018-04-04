@@ -137,7 +137,7 @@ function handleFileUpdate(message, schedule = setInterval) {
   }
 
   if (message.filePath.endsWith(`/${rppProductCode}.json`)) {
-    return receiveJsonFile(message, 'content', (json, data) =>
+    return receiveJsonFile(message, 'RPP authorization', (json, data) =>
       loadRppAuthorization(json, data));
   }
 }
