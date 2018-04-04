@@ -1,6 +1,7 @@
 /* eslint-disable function-paren-newline */
 
 const common = require("common-display-module");
+const licensing = require("common-display-module/licensing");
 const messaging = require("common-display-module/messaging");
 const config = require("./config");
 const iterations = require("./iterations");
@@ -9,10 +10,12 @@ const persistence = require("./persistence");
 const subscriptions = require("./subscriptions");
 const platform = require("rise-common-electron").platform;
 
+const rppProductCode = licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE;
+
 const displayConfigBucket = "risevision-display-notifications";
 const watchedFilePaths = [
   'content.json',
-  'authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json'
+  `authorization/${rppProductCode}.json`
 ];
 
 // So we ensure it will only be sent once.
@@ -66,7 +69,16 @@ function loadCompanyIdFromContent(json, data, schedule) {
 }
 
 function loadRppAuthorization(json, data) {
-  console.log(json, data);
+  if (typeof json.authorized === 'boolean') {
+    const timestamp = Date.now();
+    const update = {
+      [rppProductCode]: {active: json.authorized, timestamp}
+    };
+
+    return subscriptions.applyStatusUpdates(update);
+  }
+
+  return logger.error(`RPP authorization could not be retrieved from content: ${data}`);
 }
 
 function receiveJsonFile(message, label, action) {
@@ -103,7 +115,7 @@ function handleFileUpdate(message, schedule = setInterval) {
       loadCompanyIdFromContent(json, data, schedule));
   }
 
-  if (message.filePath.endsWith("/c4b368be86245bf9501baaa6e0b00df9719869fd.json")) {
+  if (message.filePath.endsWith(`/${rppProductCode}.json`)) {
     return receiveJsonFile(message, 'content', (json, data) =>
       loadRppAuthorization(json, data));
   }

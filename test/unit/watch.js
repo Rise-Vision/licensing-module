@@ -10,6 +10,7 @@ const platform = require("rise-common-electron").platform;
 const config = require("../../src/config");
 const iterations = require("../../src/iterations");
 const persistence = require("../../src/persistence");
+const subscriptions = require("../../src/subscriptions");
 const watch = require("../../src/watch");
 
 const mockContent = `
@@ -105,6 +106,7 @@ describe("Watch - Unit", ()=> {
   beforeEach(()=> {
     const settings = {displayid: "DIS123"};
 
+    simple.mock(Date, "now").returnWith(100);
     simple.mock(messaging, "broadcastMessage").returnWith();
     simple.mock(logger, "error").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
@@ -112,6 +114,7 @@ describe("Watch - Unit", ()=> {
     simple.mock(iterations, "ensureLicensingLoopIsRunning").resolveWith(true);
     simple.mock(persistence, "save").resolveWith(true);
     simple.mock(persistence, "saveAndReport").resolveWith(true);
+    simple.mock(subscriptions, "applyStatusUpdates").resolveWith(true);
   });
 
   afterEach(()=> {
@@ -210,4 +213,53 @@ describe("Watch - Unit", ()=> {
       assert(!persistence.save.called);
     });
   });
+
+  it("should extract active RPP license from authorization file", ()=>{
+    simple.mock(platform, "readTextFile").resolveWith('{"authorized":true}');
+
+    return watch.handleFileUpdate({
+      topic: "file-update",
+      status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json",
+      ospath: "xxxxxxx"
+    })
+    .then(() => {
+      assert.equal(subscriptions.applyStatusUpdates.callCount, 1);
+      assert.deepEqual(subscriptions.applyStatusUpdates.lastCall.args[0], {
+        c4b368be86245bf9501baaa6e0b00df9719869fd: {active: true, timestamp: 100}
+      });
+    });
+  });
+
+  it("should extract inactive RPP license from authorization file", ()=>{
+    simple.mock(platform, "readTextFile").resolveWith('{"authorized":false}');
+
+    return watch.handleFileUpdate({
+      topic: "file-update",
+      status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json",
+      ospath: "xxxxxxx"
+    })
+    .then(() => {
+      assert.equal(subscriptions.applyStatusUpdates.callCount, 1);
+      assert.deepEqual(subscriptions.applyStatusUpdates.lastCall.args[0], {
+        c4b368be86245bf9501baaa6e0b00df9719869fd: {active: false, timestamp: 100}
+      });
+    });
+  });
+
+  it("should not extract RPP license from invalid authorization file", ()=>{
+    simple.mock(platform, "readTextFile").resolveWith('{}');
+
+    return watch.handleFileUpdate({
+      topic: "file-update",
+      status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json",
+      ospath: "xxxxxxx"
+    })
+    .then(() => {
+      assert(!subscriptions.applyStatusUpdates.called);
+    });
+  });
+
 });
