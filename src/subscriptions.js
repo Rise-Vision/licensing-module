@@ -12,14 +12,10 @@ function init(data) {
   currentSubscriptionStatusTable = data;
 }
 
-function hasSubscriptionDataChanges(current, updated) {
-  const currentKeys = Object.keys(current);
-  const updatedKeys = Object.keys(updated);
-
-  return currentKeys.length < updatedKeys.length ||
-    updatedKeys.some(key =>
-      !current[key] || current[key].active !== updated[key].active
-    );
+function subscriptionDataChangesFor(current, updated) {
+  return Object.keys(updated).filter(key =>
+    !current[key] || current[key].active !== updated[key].active
+  );
 }
 
 function getSubscriptionData() {
@@ -37,14 +33,14 @@ function broadcastSubscriptionData() {
 }
 
 function applyStatusUpdates(updatedStatusTable) {
-  const changed = hasSubscriptionDataChanges(currentSubscriptionStatusTable, updatedStatusTable);
+  const changed = subscriptionDataChangesFor(currentSubscriptionStatusTable, updatedStatusTable);
 
   currentSubscriptionStatusTable =
     Object.assign({}, currentSubscriptionStatusTable, updatedStatusTable);
 
   return persistence.saveAndReport(currentSubscriptionStatusTable)
   .then(() => {
-    if (changed) {
+    if (changed.length > 0) {
       const data = JSON.stringify(currentSubscriptionStatusTable);
       logger.file(`Subscription data updated: ${data}`);
 
@@ -71,7 +67,7 @@ module.exports = {
   applyStatusUpdates,
   broadcastSubscriptionData,
   getSubscriptionData,
-  hasSubscriptionDataChanges,
   loadSubscriptionApiDataAndBroadcast,
+  subscriptionDataChangesFor,
   clear
 };

@@ -23,7 +23,7 @@ describe("Subscriptions - Unit", ()=>
   });
 
   it("should detect changes if there is no previous licensing data", () => {
-    const changed = subscriptions.hasSubscriptionDataChanges(
+    const changed = subscriptions.subscriptionDataChangesFor(
       {},
       {
         c4b368be86245bf9501baaa6e0b00df9719869fd: {
@@ -35,11 +35,14 @@ describe("Subscriptions - Unit", ()=>
       }
     );
 
-    assert(changed);
+    assert.deepEqual(changed, [
+      'c4b368be86245bf9501baaa6e0b00df9719869fd',
+      'b0cba08a4baa0c62b8cdc621b6f6a124f89a03db'
+    ]);
   });
 
   it("should detect changes if there is more licensing data", () => {
-    const changed = subscriptions.hasSubscriptionDataChanges(
+    const changed = subscriptions.subscriptionDataChangesFor(
       {
         c4b368be86245bf9501baaa6e0b00df9719869fd: {
           active: true, timestamp: 100
@@ -55,11 +58,11 @@ describe("Subscriptions - Unit", ()=>
       }
     );
 
-    assert(changed);
+    assert.deepEqual(changed, ['b0cba08a4baa0c62b8cdc621b6f6a124f89a03db']);
   });
 
   it("should not detect changes if there is a subset of licensing data with same values", () => {
-    const changed = subscriptions.hasSubscriptionDataChanges(
+    const changed = subscriptions.subscriptionDataChangesFor(
       {
         c4b368be86245bf9501baaa6e0b00df9719869fd: {
           active: true, timestamp: 100
@@ -75,11 +78,11 @@ describe("Subscriptions - Unit", ()=>
       }
     );
 
-    assert(!changed);
+    assert.deepEqual(changed, []);
   });
 
-  it("should not detect changes if there is a subset of licensing data with different values", () => {
-    const changed = subscriptions.hasSubscriptionDataChanges(
+  it("should detect changes if there is a subset of licensing data with different values", () => {
+    const changed = subscriptions.subscriptionDataChangesFor(
       {
         c4b368be86245bf9501baaa6e0b00df9719869fd: {
           active: true, timestamp: 100
@@ -90,16 +93,16 @@ describe("Subscriptions - Unit", ()=>
       },
       {
         c4b368be86245bf9501baaa6e0b00df9719869fd: {
-          active: true, timestamp: 100
+          active: false, timestamp: 100
         }
       }
     );
 
-    assert(!changed);
+    assert.deepEqual(changed, ['c4b368be86245bf9501baaa6e0b00df9719869fd']);
   });
 
   it("should detect changes if there is different licensing data", () => {
-    const changed = subscriptions.hasSubscriptionDataChanges(
+    const changed = subscriptions.subscriptionDataChangesFor(
       {
         c4b368be86245bf9501baaa6e0b00df9719869fd: {
           active: true, timestamp: 100
@@ -118,11 +121,11 @@ describe("Subscriptions - Unit", ()=>
       }
     );
 
-    assert(changed);
+    assert.deepEqual(changed, ['b0cba08a4baa0c62b8cdc621b6f6a124f89a03db']);
   });
 
-  it("should detect changes if active values are the same, even if timestamps not", () => {
-    const changed = subscriptions.hasSubscriptionDataChanges(
+  it("should not detect changes if active values are the same, even if timestamps not", () => {
+    const changed = subscriptions.subscriptionDataChangesFor(
       {
         c4b368be86245bf9501baaa6e0b00df9719869fd: {
           active: true, timestamp: 100
@@ -141,7 +144,7 @@ describe("Subscriptions - Unit", ()=>
       }
     );
 
-    assert(!changed);
+    assert.deepEqual(changed, []);
   });
 
   it("should broadcast messages depending on current Subscription Status API data", () => {
