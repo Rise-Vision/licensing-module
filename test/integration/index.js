@@ -291,7 +291,6 @@ describe("Licensing - Integration", ()=>
         messaging.broadcastMessage.calls.slice(6).forEach(call => {
           const event = call.args[0];
 
-          // I sent the event
           assert.equal(event.from, "licensing");
 
           switch (event.topic) {
@@ -324,6 +323,30 @@ describe("Licensing - Integration", ()=>
             default: assert.fail();
           }
         });
+
+        return eventHandler({topic: "rpp-licensing-request"});
+      })
+      .then(() => {
+        assert.equal(messaging.broadcastMessage.callCount, 10);
+
+        const event = messaging.broadcastMessage.lastCall.args[0];
+
+        assert.equal(event.from, "licensing");
+        assert.equal(event.topic, "rpp-licensing-update");
+        assert(event.isAuthorized);
+        assert.equal(event.userFriendlyStatus, 'RPP authorized');
+
+        return eventHandler({topic: "storage-licensing-request"});
+      })
+      .then(() => {
+        assert.equal(messaging.broadcastMessage.callCount, 11);
+
+        const event = messaging.broadcastMessage.lastCall.args[0];
+
+        assert.equal(event.from, "licensing");
+        assert.equal(event.topic, "storage-licensing-update");
+        assert(event.isAuthorized);
+        assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
 
         done();
       })

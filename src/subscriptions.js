@@ -45,6 +45,11 @@ function broadcastSubscriptionData(codes = supportedProductCodes) {
   ));
 }
 
+function broadcastSubscriptionDataForCode(code) {
+  return currentSubscriptionStatusTable[code] &&
+    broadcastSimpleLicensingMessages(currentSubscriptionStatusTable[code], code);
+}
+
 function broadcastSimpleLicensingMessages(subscription, code) {
   const isAuthorized = subscription.active;
   const simpleMessage = {from: config.moduleName, isAuthorized};
@@ -101,6 +106,7 @@ module.exports = {
   init,
   applyStatusUpdates,
   broadcastSubscriptionData,
+  broadcastSubscriptionDataForCode,
   getSubscriptionData,
   loadSubscriptionApiDataAndBroadcast,
   subscriptionDataChangesFor,
