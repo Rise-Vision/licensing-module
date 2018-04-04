@@ -25,13 +25,6 @@ function getSubscriptionStatusApiUrl() {
   }`;
 }
 
-// this call is deprectated and will be substituted by Apps Display Licensing when it becomes available.
-function getRisePlayerProfessionalAuthorizationApiUrl(displayId) {
-  return `https://${SUBSCRIPTION_API_SERVER}/v1/widget/auth?id=${displayId}&pc=${
-    licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE
-  }&startTrial=false`;
-}
-
 function getCachePath() {
   const modulePath = common.getModulePath(moduleName);
 
@@ -59,6 +52,5 @@ module.exports = {
     companyId = id;
   },
   getCachePath,
-  getSubscriptionStatusApiUrl,
-  getRisePlayerProfessionalAuthorizationApiUrl
+  getSubscriptionStatusApiUrl
 };

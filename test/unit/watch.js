@@ -10,6 +10,7 @@ const platform = require("rise-common-electron").platform;
 const config = require("../../src/config");
 const iterations = require("../../src/iterations");
 const persistence = require("../../src/persistence");
+const subscriptions = require("../../src/subscriptions");
 const watch = require("../../src/watch");
 
 const mockContent = `
@@ -105,6 +106,7 @@ describe("Watch - Unit", ()=> {
   beforeEach(()=> {
     const settings = {displayid: "DIS123"};
 
+    simple.mock(Date, "now").returnWith(100);
     simple.mock(messaging, "broadcastMessage").returnWith();
     simple.mock(logger, "error").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
@@ -112,16 +114,17 @@ describe("Watch - Unit", ()=> {
     simple.mock(iterations, "ensureLicensingLoopIsRunning").resolveWith(true);
     simple.mock(persistence, "save").resolveWith(true);
     simple.mock(persistence, "saveAndReport").resolveWith(true);
+    simple.mock(subscriptions, "applyStatusUpdates").resolveWith(true);
   });
 
   afterEach(()=> {
-    watch.clearMessageAlreadySentFlag();
+    watch.clearMessagesAlreadySentFlag();
 
     simple.restore()
   });
 
   it("should not send WATCH messages if no module is available", () => {
-    return watch.startWatchIfLocalStorageModuleIsAvailable({clients: []})
+    return watch.sendWatchMessages({clients: []})
     .then(() => {
       // no clients, so WATCH messages shouldn't have been sent
       assert(!messaging.broadcastMessage.called);
@@ -129,7 +132,7 @@ describe("Watch - Unit", ()=> {
   });
 
   it("should not send WATCH messages if local-storage module is not available", () => {
-    return watch.startWatchIfLocalStorageModuleIsAvailable({
+    return watch.sendWatchMessages({
       clients: ["logging", "system-metrics"]
     })
     .then(() => {
@@ -139,32 +142,35 @@ describe("Watch - Unit", ()=> {
   });
 
   it("should send WATCH messages if local-storage module is available", () => {
-    return watch.startWatchIfLocalStorageModuleIsAvailable({
+    return watch.sendWatchMessages({
       clients: ["logging", "system-metrics", "local-storage"]
     })
     .then(() => {
-      // so WATCH messages should have been sent for both screen-control.txt and content.json files
+      // so WATCH messages should have been sent for both authorization and content.json files
       assert(messaging.broadcastMessage.called);
-      assert.equal(1, messaging.broadcastMessage.callCount);
+      assert.equal(2, messaging.broadcastMessage.callCount);
 
-      const event = messaging.broadcastMessage.lastCall.args[0];
+      const pathRegex =
+        new RegExp('^risevision-display-notifications/DIS123/(content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$')
 
-      assert(event);
-      // check we sent it
-      assert.equal(event.from, "licensing");
-      // check it's a WATCH event
-      assert.equal(event.topic, "watch");
-      // check the URL of the file.
-      assert.equal(event.filePath, "risevision-display-notifications/DIS123/content.json");
+      messaging.broadcastMessage.calls.forEach(call => {
+        const event = call.args[0];
+
+        assert(event);
+        assert.equal(event.from, "licensing");
+        assert.equal(event.topic, "watch");
+        assert(pathRegex.test(event.filePath));
+      });
     });
   });
 
   it("should extract customer id from content file", ()=>{
     simple.mock(platform, "readTextFile").resolveWith(mockContent);
 
-    return watch.receiveContentFile({
+    return watch.handleFileUpdate({
       topic: "file-update",
       status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/content.json",
       ospath: "xxxxxxx"
     })
     .then(() => {
@@ -178,9 +184,10 @@ describe("Watch - Unit", ()=> {
     const mockScheduleText = '{"content": invalid}';
     simple.mock(platform, "readTextFile").resolveWith(mockScheduleText);
 
-    return watch.receiveContentFile({
+    return watch.handleFileUpdate({
       topic: "file-update",
       status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/content.json",
       ospath: "xxxxxxx"
     })
     .then(() => {
@@ -194,9 +201,10 @@ describe("Watch - Unit", ()=> {
     const mockScheduleText = '{"content": ""}';
     simple.mock(platform, "readTextFile").resolveWith(mockScheduleText);
 
-    return watch.receiveContentFile({
+    return watch.handleFileUpdate({
       topic: "file-update",
       status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/content.json",
       ospath: "xxxxxxx"
     })
     .then(() => {
@@ -205,4 +213,53 @@ describe("Watch - Unit", ()=> {
       assert(!persistence.save.called);
     });
   });
+
+  it("should extract active RPP license from authorization file", ()=>{
+    simple.mock(platform, "readTextFile").resolveWith('{"authorized":true}');
+
+    return watch.handleFileUpdate({
+      topic: "file-update",
+      status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json",
+      ospath: "xxxxxxx"
+    })
+    .then(() => {
+      assert.equal(subscriptions.applyStatusUpdates.callCount, 1);
+      assert.deepEqual(subscriptions.applyStatusUpdates.lastCall.args[0], {
+        c4b368be86245bf9501baaa6e0b00df9719869fd: {active: true, timestamp: 100}
+      });
+    });
+  });
+
+  it("should extract inactive RPP license from authorization file", ()=>{
+    simple.mock(platform, "readTextFile").resolveWith('{"authorized":false}');
+
+    return watch.handleFileUpdate({
+      topic: "file-update",
+      status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json",
+      ospath: "xxxxxxx"
+    })
+    .then(() => {
+      assert.equal(subscriptions.applyStatusUpdates.callCount, 1);
+      assert.deepEqual(subscriptions.applyStatusUpdates.lastCall.args[0], {
+        c4b368be86245bf9501baaa6e0b00df9719869fd: {active: false, timestamp: 100}
+      });
+    });
+  });
+
+  it("should not extract RPP license from invalid authorization file", ()=>{
+    simple.mock(platform, "readTextFile").resolveWith('{}');
+
+    return watch.handleFileUpdate({
+      topic: "file-update",
+      status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json",
+      ospath: "xxxxxxx"
+    })
+    .then(() => {
+      assert(!subscriptions.applyStatusUpdates.called);
+    });
+  });
+
 });

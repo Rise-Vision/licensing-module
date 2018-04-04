@@ -186,32 +186,4 @@ describe("Store - Unit", ()=>
     })
   });
 
-  it("should return active RisePlayerProfessional", () => {
-    simple.mock(store, "fetchRisePlayerProfessionalAuthorization").resolveWith({
-      body: {
-        authorized: true,
-        expiry: '2018-01-25T16:47:42.042+0000',
-        signatures: null,
-        error: null
-      }
-    });
-
-    return store.getRisePlayerProfessionalAuthorization()
-    .then(authorized => assert(authorized))
-  });
-
-  it("should return not active RisePlayerProfessional", () => {
-    simple.mock(store, "fetchRisePlayerProfessionalAuthorization").resolveWith({
-      body: {
-        authorized: false,
-        expiry: '2018-01-25T16:47:42.042+0000',
-        signatures: null,
-        error: null
-      }
-    });
-
-    return store.getRisePlayerProfessionalAuthorization()
-    .then(authorized => assert(!authorized))
-  });
-
 });

@@ -7,26 +7,17 @@ const logger = require("./logger");
 const persistence = require("./persistence");
 const subscriptions = require("./subscriptions");
 const watch = require("./watch");
-const deprecatedIterations = require("./deprecated_widget_api_iterations");
-
-const displayConfigBucket = "risevision-display-notifications";
 
 function configureMessagingHandlers(receiver, schedule) {
   receiver.on("message", message => {
     if (!message.topic) {return;}
     switch (message.topic.toUpperCase()) {
       case "CLIENT-LIST":
-        return watch.startWatchIfLocalStorageModuleIsAvailable(message);
+        return watch.sendWatchMessages(message);
       case "LICENSING-REQUEST":
         return subscriptions.broadcastSubscriptionData();
       case "FILE-UPDATE":
-        if (!message.filePath || !message.filePath.startsWith(displayConfigBucket)) {
-          return;
-        }
-
-        if (message.filePath.endsWith("/content.json")) {
-          return watch.receiveContentFile(message, schedule);
-        }
+        return watch.handleFileUpdate(message, schedule)
     }
   });
 
@@ -42,7 +33,6 @@ function run(schedule = setInterval, scheduleDeprecated = setInterval) {
 
     messaging.receiveMessages(config.moduleName).then(receiver =>
       iterations.configureAndStartIfCompanyIdIsAvailable(companyId, licensing, schedule)
-      .then(() => deprecatedIterations.ensureLicensingLoopIsRunning(scheduleDeprecated))
       .then(() => configureMessagingHandlers(receiver, schedule))
       .catch(error =>
         logger.file(error.stack, 'Unexpected error while configuring messaging handlers')

@@ -1,5 +1,6 @@
 /* eslint-env mocha */
-/* eslint-disable max-statements, global-require, no-magic-numbers */
+/* eslint-disable no-magic-numbers */
+
 const assert = require("assert");
 const common = require("common-display-module");
 const messaging = require("common-display-module/messaging");
@@ -12,10 +13,8 @@ const logger = require("../../src/logger");
 const iterations = require("../../src/iterations");
 const subscriptions = require("../../src/subscriptions");
 const watch = require("../../src/watch");
-const deprecatedIterations = require("../../src/deprecated_widget_api_iterations");
 
-describe("Watch - Integration", ()=>
-{
+describe("Watch - Integration", () => {
 
   beforeEach(() => {
     const settings = {displayid: "DIS123"};
@@ -28,15 +27,13 @@ describe("Watch - Integration", ()=>
     simple.mock(platform, "fileExists").returnWith(false);
     simple.mock(logger, "file").returnWith();
     simple.mock(logger, "all").returnWith();
-    simple.mock(deprecatedIterations, "ensureLicensingLoopIsRunning").resolveWith(true);
   });
 
   afterEach(() => {
     simple.restore()
-    watch.clearMessageAlreadySentFlag();
+    watch.clearMessagesAlreadySentFlag();
     config.setCompanyId(null);
     iterations.stop();
-    deprecatedIterations.stop();
     subscriptions.clear();
   });
 
@@ -70,19 +67,20 @@ describe("Watch - Integration", ()=>
         })
         .then(() =>
         {
-          // so WATCH message should have been sent
-          assert.equal(messaging.broadcastMessage.callCount, 1);
+          // so WATCH messages should have been sent
+          assert.equal(messaging.broadcastMessage.callCount, 2);
 
-          // this is the request for content.json
-          const event = messaging.broadcastMessage.lastCall.args[0];
+          const pathRegex =
+            new RegExp('^risevision-display-notifications/DIS123/(content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$')
 
-          assert(event);
-          // check we sent it
-          assert.equal(event.from, "licensing");
-          // check it's a WATCH event
-          assert.equal(event.topic, "watch");
-          // check the URL of the file.
-          assert.equal(event.filePath, "risevision-display-notifications/DIS123/content.json");
+          messaging.broadcastMessage.calls.forEach(call => {
+            const event = call.args[0];
+
+            assert(event);
+            assert.equal(event.from, "licensing");
+            assert.equal(event.topic, "watch");
+            assert(pathRegex.test(event.filePath));
+          });
 
           done();
         })
