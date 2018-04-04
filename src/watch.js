@@ -47,15 +47,13 @@ function sendWatchMessage() {
       messaging.broadcastMessage({
         from: config.moduleName,
         topic: "watch",
-        filePath: `risevision-display-notifications/${displayId}/${path}`
+        filePath: `${displayConfigBucket}/${displayId}/${path}`
       })));
     }
   );
 }
 
-function loadCompanyIdFromContent(data, schedule) {
-  const json = JSON.parse(data);
-
+function loadCompanyIdFromContent(json, data, schedule) {
   // Note that if the display doesn't have a schedule assigned, licensing data won't be avaiable.
   if (json.content && json.content.schedule && json.content.schedule.companyId) {
     const companyId = json.content.schedule.companyId;
@@ -67,7 +65,11 @@ function loadCompanyIdFromContent(data, schedule) {
   return logger.error(`Company id could not be retrieved from content: ${data}`);
 }
 
-function receiveContentFile(message, schedule = setInterval) {
+function loadRppAuthorization(json, data) {
+  console.log(json, data);
+}
+
+function receiveJsonFile(message, label, action) {
   if (["DELETED", "NOEXIST"].includes(message.status)) {
     return;
   }
@@ -78,13 +80,15 @@ function receiveContentFile(message, schedule = setInterval) {
     return platform.readTextFile(path)
     .then(data => {
       try {
-        return loadCompanyIdFromContent(data, schedule);
+        const json = JSON.parse(data);
+
+        return action(json, data);
       } catch (error) {
-        return logger.error(error.stack, `Could not parse content file ${path}`);
+        return logger.error(error.stack, `Could not parse ${label} file ${path}`);
       }
     })
     .catch(error =>
-      logger.file(error.stack, `Could not read content file ${path}`)
+      logger.file(error.stack, `Could not read ${label} file ${path}`)
     )
   }
 }
@@ -95,7 +99,13 @@ function handleFileUpdate(message, schedule = setInterval) {
   }
 
   if (message.filePath.endsWith("/content.json")) {
-    return module.exports.receiveContentFile(message, schedule);
+    return receiveJsonFile(message, 'content', (json, data) =>
+      loadCompanyIdFromContent(json, data, schedule));
+  }
+
+  if (message.filePath.endsWith("/c4b368be86245bf9501baaa6e0b00df9719869fd.json")) {
+    return receiveJsonFile(message, 'content', (json, data) =>
+      loadRppAuthorization(json, data));
   }
 }
 
@@ -103,6 +113,5 @@ module.exports = {
   handleFileUpdate,
   startWatchIfLocalStorageModuleIsAvailable,
   clearMessageAlreadySentFlag,
-  receiveContentFile,
   sendWatchMessage
 };

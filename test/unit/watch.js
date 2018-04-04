@@ -164,9 +164,10 @@ describe("Watch - Unit", ()=> {
   it("should extract customer id from content file", ()=>{
     simple.mock(platform, "readTextFile").resolveWith(mockContent);
 
-    return watch.receiveContentFile({
+    return watch.handleFileUpdate({
       topic: "file-update",
       status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/content.json",
       ospath: "xxxxxxx"
     })
     .then(() => {
@@ -180,9 +181,10 @@ describe("Watch - Unit", ()=> {
     const mockScheduleText = '{"content": invalid}';
     simple.mock(platform, "readTextFile").resolveWith(mockScheduleText);
 
-    return watch.receiveContentFile({
+    return watch.handleFileUpdate({
       topic: "file-update",
       status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/content.json",
       ospath: "xxxxxxx"
     })
     .then(() => {
@@ -196,9 +198,10 @@ describe("Watch - Unit", ()=> {
     const mockScheduleText = '{"content": ""}';
     simple.mock(platform, "readTextFile").resolveWith(mockScheduleText);
 
-    return watch.receiveContentFile({
+    return watch.handleFileUpdate({
       topic: "file-update",
       status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/content.json",
       ospath: "xxxxxxx"
     })
     .then(() => {
