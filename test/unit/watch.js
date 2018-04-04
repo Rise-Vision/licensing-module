@@ -154,11 +154,8 @@ describe("Watch - Unit", ()=> {
         const event = call.args[0];
 
         assert(event);
-        // check we sent it
         assert.equal(event.from, "licensing");
-        // check it's a WATCH event
         assert.equal(event.topic, "watch");
-        // check the URL of the file.
         assert(pathRegex.test(event.filePath));
       });
     });
