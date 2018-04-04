@@ -112,7 +112,7 @@ describe("Licensing - Integration", ()=>
   {
     const settings = {displayid: "DIS123"};
 
-    simple.mock(messaging, "broadcastMessage").returnWith();
+    simple.mock(messaging, "broadcastMessage").resolveWith();
     simple.mock(messaging, "getClientList").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(common, "getModuleVersion").returnWith("1.1");
@@ -201,7 +201,7 @@ describe("Licensing - Integration", ()=>
       assert.equal(interval, ONE_DAY);
 
       // licensing-storage and the RPP licensing watch
-      assert.equal(messaging.broadcastMessage.callCount, 2);
+      assert.equal(messaging.broadcastMessage.callCount, 4);
 
       messaging.broadcastMessage.calls.forEach(call => {
         const event = call.args[0];
@@ -224,6 +224,16 @@ describe("Licensing - Integration", ()=>
             break;
           }
 
+          case 'rpp-licensing-update':
+            assert(event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'RPP authorized');
+            break;
+
+          case 'storage-licensing-update':
+            assert(!event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'Rise Storage not authorized');
+            break;
+
           case "watch":
             assert.equal(event.filePath, 'risevision-display-notifications/DIS123/authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json');
 
@@ -234,54 +244,86 @@ describe("Licensing - Integration", ()=>
       });
 
       action().then(() => {
-        assert.equal(messaging.broadcastMessage.callCount, 3);
+        assert.equal(messaging.broadcastMessage.callCount, 6);
 
-        const event = messaging.broadcastMessage.lastCall.args[0];
+        messaging.broadcastMessage.calls.slice(4).forEach(call => {
+          const event = call.args[0];
 
-        // I sent the event
-        assert.equal(event.from, "licensing");
-        // it's a log event
-        assert.equal(event.topic, "licensing-update");
+          // I sent the event
+          assert.equal(event.from, "licensing");
 
-        assert(event.subscriptions);
+          switch (event.topic) {
+            case "licensing-update": {
+              assert(event.subscriptions);
 
-        const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
-        assert(rpp);
-        assert(rpp.active);
+              const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
+              assert(rpp);
+              assert(rpp.active);
 
-        const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
-        assert(storage);
-        // active on next iterations
-        assert(storage.active);
+              const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
+              assert(storage);
+              // now active
+              assert(storage.active);
+              break;
+            }
+
+            case 'storage-licensing-update':
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+              break;
+
+            default: assert.fail();
+          }
+        });
 
         return action();
       })
       .then(() => {
         // no more broadcasts
-        assert.equal(messaging.broadcastMessage.callCount, 3);
+        assert.equal(messaging.broadcastMessage.callCount, 6);
 
         return eventHandler({topic: "licensing-request"});
       })
       .then(() => {
         // forced broadcast, same event as current.
-        assert.equal(messaging.broadcastMessage.callCount, 4);
+        assert.equal(messaging.broadcastMessage.callCount, 9);
 
-        const event = messaging.broadcastMessage.lastCall.args[0];
+        messaging.broadcastMessage.calls.slice(6).forEach(call => {
+          const event = call.args[0];
 
-        // I sent the event
-        assert.equal(event.from, "licensing");
-        // it's a log event
-        assert.equal(event.topic, "licensing-update");
+          // I sent the event
+          assert.equal(event.from, "licensing");
 
-        assert(event.subscriptions);
+          switch (event.topic) {
+            case "licensing-update": {
+              assert(event.subscriptions);
 
-        const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
-        assert(rpp);
-        assert(rpp.active);
+              const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
+              assert(rpp);
+              assert(rpp.active);
 
-        const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
-        assert(storage);
-        assert(storage.active);
+              const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
+              assert(storage);
+              // not active on first iteration
+              assert(storage.active);
+              break;
+            }
+
+            case 'rpp-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'RPP authorized');
+              break;
+
+            case 'storage-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+              break;
+
+            default: assert.fail();
+          }
+        });
 
         done();
       })
