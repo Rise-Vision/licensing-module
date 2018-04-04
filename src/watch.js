@@ -10,6 +10,10 @@ const subscriptions = require("./subscriptions");
 const platform = require("rise-common-electron").platform;
 
 const displayConfigBucket = "risevision-display-notifications";
+const watchedFilePaths = [
+  'content.json',
+  'authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json'
+];
 
 // So we ensure it will only be sent once.
 let watchMessageAlreadySent = false
@@ -38,12 +42,14 @@ function startWatchIfLocalStorageModuleIsAvailable(message) {
 
 function sendWatchMessage() {
   return common.getDisplayId()
-  .then(displayId =>
-    messaging.broadcastMessage({
-      from: config.moduleName,
-      topic: "watch",
-      filePath: `risevision-display-notifications/${displayId}/content.json`
-    })
+  .then(displayId => {
+    return Promise.all(watchedFilePaths.map(path =>
+      messaging.broadcastMessage({
+        from: config.moduleName,
+        topic: "watch",
+        filePath: `risevision-display-notifications/${displayId}/${path}`
+      })));
+    }
   );
 }
 

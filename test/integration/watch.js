@@ -67,19 +67,23 @@ describe("Watch - Integration", ()=>
         })
         .then(() =>
         {
-          // so WATCH message should have been sent
-          assert.equal(messaging.broadcastMessage.callCount, 1);
+          // so WATCH messages should have been sent
+          assert.equal(messaging.broadcastMessage.callCount, 2);
 
-          // this is the request for content.json
-          const event = messaging.broadcastMessage.lastCall.args[0];
+          const pathRegex =
+            new RegExp('^risevision-display-notifications/DIS123/(content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$')
 
-          assert(event);
-          // check we sent it
-          assert.equal(event.from, "licensing");
-          // check it's a WATCH event
-          assert.equal(event.topic, "watch");
-          // check the URL of the file.
-          assert.equal(event.filePath, "risevision-display-notifications/DIS123/content.json");
+          messaging.broadcastMessage.calls.forEach(call => {
+            const event = call.args[0];
+
+            assert(event);
+            // check we sent it
+            assert.equal(event.from, "licensing");
+            // check it's a WATCH event
+            assert.equal(event.topic, "watch");
+            // check the URL of the file.
+            assert(pathRegex.test(event.filePath));
+          });
 
           done();
         })

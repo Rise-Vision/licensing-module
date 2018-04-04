@@ -143,19 +143,24 @@ describe("Watch - Unit", ()=> {
       clients: ["logging", "system-metrics", "local-storage"]
     })
     .then(() => {
-      // so WATCH messages should have been sent for both screen-control.txt and content.json files
+      // so WATCH messages should have been sent for both authorization and content.json files
       assert(messaging.broadcastMessage.called);
-      assert.equal(1, messaging.broadcastMessage.callCount);
+      assert.equal(2, messaging.broadcastMessage.callCount);
 
-      const event = messaging.broadcastMessage.lastCall.args[0];
+      const pathRegex =
+        new RegExp('^risevision-display-notifications/DIS123/(content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$')
 
-      assert(event);
-      // check we sent it
-      assert.equal(event.from, "licensing");
-      // check it's a WATCH event
-      assert.equal(event.topic, "watch");
-      // check the URL of the file.
-      assert.equal(event.filePath, "risevision-display-notifications/DIS123/content.json");
+      messaging.broadcastMessage.calls.forEach(call => {
+        const event = call.args[0];
+
+        assert(event);
+        // check we sent it
+        assert.equal(event.from, "licensing");
+        // check it's a WATCH event
+        assert.equal(event.topic, "watch");
+        // check the URL of the file.
+        assert(pathRegex.test(event.filePath));
+      });
     });
   });
 
