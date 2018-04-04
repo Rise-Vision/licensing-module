@@ -118,13 +118,13 @@ describe("Watch - Unit", ()=> {
   });
 
   afterEach(()=> {
-    watch.clearMessageAlreadySentFlag();
+    watch.clearMessagesAlreadySentFlag();
 
     simple.restore()
   });
 
   it("should not send WATCH messages if no module is available", () => {
-    return watch.startWatchIfLocalStorageModuleIsAvailable({clients: []})
+    return watch.sendWatchMessages({clients: []})
     .then(() => {
       // no clients, so WATCH messages shouldn't have been sent
       assert(!messaging.broadcastMessage.called);
@@ -132,7 +132,7 @@ describe("Watch - Unit", ()=> {
   });
 
   it("should not send WATCH messages if local-storage module is not available", () => {
-    return watch.startWatchIfLocalStorageModuleIsAvailable({
+    return watch.sendWatchMessages({
       clients: ["logging", "system-metrics"]
     })
     .then(() => {
@@ -142,7 +142,7 @@ describe("Watch - Unit", ()=> {
   });
 
   it("should send WATCH messages if local-storage module is available", () => {
-    return watch.startWatchIfLocalStorageModuleIsAvailable({
+    return watch.sendWatchMessages({
       clients: ["logging", "system-metrics", "local-storage"]
     })
     .then(() => {

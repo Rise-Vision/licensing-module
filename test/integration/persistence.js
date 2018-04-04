@@ -62,7 +62,7 @@ describe("Persistence - Integration", ()=>
     config.setCompanyId(null);
     iterations.stop();
     subscriptions.clear();
-    watch.clearMessageAlreadySentFlag();
+    watch.clearMessagesAlreadySentFlag();
   });
 
   it("should start iterations and broadcast licensing events based on cache file contents", done => {

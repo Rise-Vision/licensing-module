@@ -31,7 +31,7 @@ describe("Watch - Integration", () => {
 
   afterEach(() => {
     simple.restore()
-    watch.clearMessageAlreadySentFlag();
+    watch.clearMessagesAlreadySentFlag();
     config.setCompanyId(null);
     iterations.stop();
     subscriptions.clear();

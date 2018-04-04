@@ -13,46 +13,67 @@ const platform = require("rise-common-electron").platform;
 const rppProductCode = licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE;
 
 const displayConfigBucket = "risevision-display-notifications";
-const watchedFilePaths = [
-  'content.json',
-  `authorization/${rppProductCode}.json`
-];
 
 // So we ensure it will only be sent once.
-let watchMessageAlreadySent = false
+let contentWatchMessageAlreadySent = false
+let authorizationWatchMessageAlreadySent = false
 
-function clearMessageAlreadySentFlag() {
-  watchMessageAlreadySent = false;
+function clearMessagesAlreadySentFlag() {
+  contentWatchMessageAlreadySent = false;
+  authorizationWatchMessageAlreadySent = false
 }
 
-function startWatchIfLocalStorageModuleIsAvailable(message) {
-  if (!watchMessageAlreadySent && !config.getCompanyId()) {
+function sendWatchMessages(message) {
+  return Promise.all([sendContentWatch(message), sendRppLicenseWatch(message)]);
+}
+
+function sendContentWatch(message) {
+  if (!contentWatchMessageAlreadySent && !config.getCompanyId()) {
     logger.debug(JSON.stringify(message));
 
     const clients = message.clients;
 
     if (clients.includes("local-storage")) {
-      return module.exports.sendWatchMessage()
-      .then(() => watchMessageAlreadySent = true)
+      return module.exports.sendWatchMessageFor('content.json')
+      .then(() => contentWatchMessageAlreadySent = true)
       .catch(error =>
-        logger.file(error.stack, 'Error while sending watch message')
+        logger.file(error.stack, 'Error while sending content watch message')
       )
     }
   }
 
   return Promise.resolve();
+
 }
 
-function sendWatchMessage() {
+function sendRppLicenseWatch(message) {
+  if (!authorizationWatchMessageAlreadySent) {
+    logger.debug(JSON.stringify(message));
+
+    const clients = message.clients;
+    const path = `authorization/${rppProductCode}.json`
+
+    if (clients.includes("local-storage")) {
+      return module.exports.sendWatchMessageFor(path)
+      .then(() => authorizationWatchMessageAlreadySent = true)
+      .catch(error =>
+        logger.file(error.stack, 'Error while sending authorization watch message')
+      )
+    }
+  }
+
+  return Promise.resolve();
+
+}
+
+function sendWatchMessageFor(path) {
   return common.getDisplayId()
-  .then(displayId => {
-    return Promise.all(watchedFilePaths.map(path =>
+  .then(displayId =>
       messaging.broadcastMessage({
         from: config.moduleName,
         topic: "watch",
         filePath: `${displayConfigBucket}/${displayId}/${path}`
-      })));
-    }
+     })
   );
 }
 
@@ -123,7 +144,7 @@ function handleFileUpdate(message, schedule = setInterval) {
 
 module.exports = {
   handleFileUpdate,
-  startWatchIfLocalStorageModuleIsAvailable,
-  clearMessageAlreadySentFlag,
-  sendWatchMessage
+  clearMessagesAlreadySentFlag,
+  sendWatchMessageFor,
+  sendWatchMessages
 };

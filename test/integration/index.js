@@ -120,7 +120,6 @@ describe("Licensing - Integration", ()=>
     simple.mock(persistence, "save").resolveWith(true);
     simple.mock(platform, "fileExists").returnWith(true);
     simple.mock(Date, "now").returnWith(100);
-    simple.mock(watch, "sendWatchMessage").resolveWith(true);
 
     simple.mock(platform, "readTextFile").callFn(path => {
       return Promise.resolve(
@@ -141,7 +140,7 @@ describe("Licensing - Integration", ()=>
     config.setCompanyId(null);
     iterations.stop();
     subscriptions.clear();
-    watch.clearMessageAlreadySentFlag();
+    watch.clearMessagesAlreadySentFlag();
   });
 
   it("should start iterations and broadcast licensing events", done => {
@@ -201,30 +200,41 @@ describe("Licensing - Integration", ()=>
     licensing.run((action, interval) => {
       assert.equal(interval, ONE_DAY);
 
-      assert.equal(messaging.broadcastMessage.callCount, 1);
+      // licensing-storage and the RPP licensing watch
+      assert.equal(messaging.broadcastMessage.callCount, 2);
 
-      {
-        const event = messaging.broadcastMessage.lastCall.args[0];
+      messaging.broadcastMessage.calls.forEach(call => {
+        const event = call.args[0];
 
         // I sent the event
         assert.equal(event.from, "licensing");
-        // it's a log event
-        assert.equal(event.topic, "licensing-update");
 
-        assert(event.subscriptions);
+        switch (event.topic) {
+          case "licensing-update": {
+            assert(event.subscriptions);
 
-        const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
-        assert(rpp);
-        assert(rpp.active);
+            const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
+            assert(rpp);
+            assert(rpp.active);
 
-        const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
-        assert(storage);
-        // not active on first iteration
-        assert(!storage.active);
-      }
+            const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
+            assert(storage);
+            // not active on first iteration
+            assert(!storage.active);
+            break;
+          }
+
+          case "watch":
+            assert.equal(event.filePath, 'risevision-display-notifications/DIS123/authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json');
+
+            break;
+
+          default: assert.fail();
+        }
+      });
 
       action().then(() => {
-        assert.equal(messaging.broadcastMessage.callCount, 2);
+        assert.equal(messaging.broadcastMessage.callCount, 3);
 
         const event = messaging.broadcastMessage.lastCall.args[0];
 
@@ -248,13 +258,13 @@ describe("Licensing - Integration", ()=>
       })
       .then(() => {
         // no more broadcasts
-        assert.equal(messaging.broadcastMessage.callCount, 2);
+        assert.equal(messaging.broadcastMessage.callCount, 3);
 
         return eventHandler({topic: "licensing-request"});
       })
       .then(() => {
         // forced broadcast, same event as current.
-        assert.equal(messaging.broadcastMessage.callCount, 3);
+        assert.equal(messaging.broadcastMessage.callCount, 4);
 
         const event = messaging.broadcastMessage.lastCall.args[0];
 
@@ -277,9 +287,9 @@ describe("Licensing - Integration", ()=>
       })
       .catch(error =>
       {
-        assert.fail(error)
+        assert.fail(error);
 
-        done()
+        done();
       });
     });
   });
