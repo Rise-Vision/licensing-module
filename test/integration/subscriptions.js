@@ -16,6 +16,7 @@ describe("Subscriptions - Integration", () => {
   beforeEach(() => {
     simple.mock(Date, "now").returnWith(100);
     simple.mock(messaging, "broadcastMessage").resolveWith();
+    simple.mock(messaging, "broadcastToLocalWS").resolveWith();
     simple.mock(persistence, "saveAndReport").resolveWith();
     simple.mock(platform, "fileExists").returnWith(true);
     simple.mock(logger, "file").returnWith();
@@ -63,6 +64,14 @@ describe("Subscriptions - Integration", () => {
           default: assert.fail();
         }
       });
+
+      assert.equal(messaging.broadcastToLocalWS.callCount, 1);
+      const event = messaging.broadcastToLocalWS.lastCall.args[0];
+
+      assert.equal(event.from, 'licensing');
+      assert.equal(event.topic, "rpp-licensing-update");
+      assert(event.isAuthorized);
+      assert.equal(event.userFriendlyStatus, 'RPP authorized');
     });
   });
 
@@ -101,6 +110,14 @@ describe("Subscriptions - Integration", () => {
           default: assert.fail();
         }
       });
+
+      assert.equal(messaging.broadcastToLocalWS.callCount, 1);
+      const event = messaging.broadcastToLocalWS.lastCall.args[0];
+
+      assert.equal(event.from, 'licensing');
+      assert.equal(event.topic, "rpp-licensing-update");
+      assert(!event.isAuthorized);
+      assert.equal(event.userFriendlyStatus, 'RPP not authorized');
     });
   });
 

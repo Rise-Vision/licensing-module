@@ -39,6 +39,7 @@ describe("Persistence - Integration", ()=>
     const settings = {displayid: "DIS123"};
 
     simple.mock(messaging, "broadcastMessage").resolveWith();
+    simple.mock(messaging, "broadcastToLocalWS").resolveWith();
     simple.mock(messaging, "getClientList").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(common, "getModuleVersion").returnWith("1.1");
@@ -166,15 +167,39 @@ describe("Persistence - Integration", ()=>
         }
       });
 
+      assert.equal(messaging.broadcastToLocalWS.callCount, 3);
+
+      messaging.broadcastToLocalWS.calls.forEach(call => {
+        const event = call.args[0];
+
+        assert.equal(event.from, "licensing");
+
+        switch (event.topic) {
+          case 'rpp-licensing-update':
+
+            assert(event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'RPP authorized');
+            break;
+
+          case 'storage-licensing-update':
+
+            assert(/Rise Storage.+authorized/.test(event.userFriendlyStatus));
+            break;
+
+          default: assert.fail();
+        }
+      });
+
       action().then(() => {
         // no more broadcasts
-        assert(messaging.broadcastMessage.callCount, 5);
+        assert.equal(messaging.broadcastMessage.callCount, 5);
+        assert.equal(messaging.broadcastToLocalWS.callCount, 3);
 
         return eventHandler({topic: "licensing-request"});
       })
       .then(() => {
         // forced broadcast, same event as current.
-        assert(messaging.broadcastMessage.callCount, 8);
+        assert.equal(messaging.broadcastMessage.callCount, 8);
 
         messaging.broadcastMessage.calls.slice(5).forEach(call => {
           const event = call.args[0];
@@ -197,6 +222,30 @@ describe("Persistence - Integration", ()=>
               break;
             }
 
+            case 'rpp-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'RPP authorized');
+              break;
+
+            case 'storage-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+              break;
+
+            default: assert.fail();
+          }
+        });
+
+        assert.equal(messaging.broadcastToLocalWS.callCount, 5);
+
+        messaging.broadcastToLocalWS.calls.slice(3).forEach(call => {
+          const event = call.args[0];
+
+          assert.equal(event.from, "licensing");
+
+          switch (event.topic) {
             case 'rpp-licensing-update':
 
               assert(event.isAuthorized);

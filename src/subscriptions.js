@@ -69,7 +69,10 @@ function broadcastSimpleLicensingMessages(subscription, code) {
     return Promise.resolve();
   }
 
-  return messaging.broadcastMessage(simpleMessage);
+  return Promise.all([
+    messaging.broadcastMessage(simpleMessage),
+    messaging.broadcastToLocalWS(simpleMessage)
+  ]);
 }
 
 function applyStatusUpdates(updatedStatusTable) {

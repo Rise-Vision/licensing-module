@@ -13,6 +13,7 @@ describe("Subscriptions - Unit", ()=>
 
   beforeEach(() => {
     simple.mock(messaging, "broadcastMessage").resolveWith();
+    simple.mock(messaging, "broadcastToLocalWS").resolveWith();
     simple.mock(Date, "now").returnWith(400);
     simple.mock(persistence, "save").resolveWith(true);
   })
@@ -202,6 +203,28 @@ describe("Subscriptions - Unit", ()=>
         }
       });
 
+      assert.equal(messaging.broadcastToLocalWS.callCount, 2);
+
+      messaging.broadcastToLocalWS.calls.forEach(call => {
+        const event = call.args[0];
+
+        assert.equal(event.from, 'licensing');
+
+        switch (event.topic) {
+          case 'rpp-licensing-update':
+            assert(event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'RPP authorized');
+            break;
+
+          case 'storage-licensing-update':
+            assert(!event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'Rise Storage not authorized');
+            break;
+
+          default: assert.fail();
+        }
+      });
+
       return subscriptions.loadSubscriptionApiDataAndBroadcast();
     })
     .then(() => {
@@ -235,11 +258,20 @@ describe("Subscriptions - Unit", ()=>
         }
       });
 
+      assert.equal(messaging.broadcastToLocalWS.callCount, 3);
+
+      const event = messaging.broadcastToLocalWS.lastCall.args[0];
+
+      assert.equal(event.from, 'licensing');
+      assert(event.isAuthorized);
+      assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+
       return subscriptions.loadSubscriptionApiDataAndBroadcast();
     })
     .then(() => {
       // no further change in active flags even if timestamps change, no broadcast then
       assert.equal(messaging.broadcastMessage.callCount, 5);
+      assert.equal(messaging.broadcastToLocalWS.callCount, 3);
     })
   });
 
