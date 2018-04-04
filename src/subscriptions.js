@@ -76,18 +76,18 @@ function broadcastSimpleLicensingMessages(subscription, code) {
 }
 
 function applyStatusUpdates(updatedStatusTable) {
-  const changed = subscriptionDataChangesFor(currentSubscriptionStatusTable, updatedStatusTable);
+  const changes = subscriptionDataChangesFor(currentSubscriptionStatusTable, updatedStatusTable);
 
   currentSubscriptionStatusTable =
     Object.assign({}, currentSubscriptionStatusTable, updatedStatusTable);
 
   return persistence.saveAndReport(currentSubscriptionStatusTable)
   .then(() => {
-    if (changed.length > 0) {
+    if (changes.length > 0) {
       const data = JSON.stringify(currentSubscriptionStatusTable);
       logger.file(`Subscription data updated: ${data}`);
 
-      return broadcastSubscriptionData(changed);
+      return broadcastSubscriptionData(changes);
     }
   });
 }
