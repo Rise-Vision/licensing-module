@@ -9,6 +9,8 @@ const persistence = require("./persistence");
 const subscriptions = require("./subscriptions");
 const platform = require("rise-common-electron").platform;
 
+const displayConfigBucket = "risevision-display-notifications";
+
 // So we ensure it will only be sent once.
 let watchMessageAlreadySent = false
 
@@ -81,7 +83,18 @@ function receiveContentFile(message, schedule = setInterval) {
   }
 }
 
+function handleFileUpdate(message, schedule = setInterval) {
+  if (!message.filePath || !message.filePath.startsWith(displayConfigBucket)) {
+    return;
+  }
+
+  if (message.filePath.endsWith("/content.json")) {
+    return module.exports.receiveContentFile(message, schedule);
+  }
+}
+
 module.exports = {
+  handleFileUpdate,
   startWatchIfLocalStorageModuleIsAvailable,
   clearMessageAlreadySentFlag,
   receiveContentFile,

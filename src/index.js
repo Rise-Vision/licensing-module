@@ -8,8 +8,6 @@ const persistence = require("./persistence");
 const subscriptions = require("./subscriptions");
 const watch = require("./watch");
 
-const displayConfigBucket = "risevision-display-notifications";
-
 function configureMessagingHandlers(receiver, schedule) {
   receiver.on("message", message => {
     if (!message.topic) {return;}
@@ -19,13 +17,7 @@ function configureMessagingHandlers(receiver, schedule) {
       case "LICENSING-REQUEST":
         return subscriptions.broadcastSubscriptionData();
       case "FILE-UPDATE":
-        if (!message.filePath || !message.filePath.startsWith(displayConfigBucket)) {
-          return;
-        }
-
-        if (message.filePath.endsWith("/content.json")) {
-          return watch.receiveContentFile(message, schedule);
-        }
+        return watch.handleFileUpdate(message, schedule)
     }
   });
 
