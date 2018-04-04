@@ -1,5 +1,6 @@
 /* eslint-env mocha */
-/* eslint-disable max-statements, global-require, no-magic-numbers */
+/* eslint-disable no-magic-numbers */
+
 const assert = require("assert");
 const common = require("common-display-module");
 const messaging = require("common-display-module/messaging");
@@ -13,8 +14,7 @@ const iterations = require("../../src/iterations");
 const subscriptions = require("../../src/subscriptions");
 const watch = require("../../src/watch");
 
-describe("Watch - Integration", ()=>
-{
+describe("Watch - Integration", () => {
 
   beforeEach(() => {
     const settings = {displayid: "DIS123"};

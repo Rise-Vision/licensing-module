@@ -68,6 +68,7 @@ function clear() {
 
 module.exports = {
   init,
+  applyStatusUpdates,
   broadcastSubscriptionData,
   getSubscriptionData,
   hasSubscriptionDataChanges,
