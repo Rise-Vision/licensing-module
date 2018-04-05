@@ -38,7 +38,8 @@ describe("Persistence - Integration", ()=>
   {
     const settings = {displayid: "DIS123"};
 
-    simple.mock(messaging, "broadcastMessage").returnWith();
+    simple.mock(messaging, "broadcastMessage").resolveWith();
+    simple.mock(messaging, "broadcastToLocalWS").resolveWith();
     simple.mock(messaging, "getClientList").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(common, "getModuleVersion").returnWith("1.1");
@@ -96,74 +97,170 @@ describe("Persistence - Integration", ()=>
     licensing.run((action, interval) => {
       assert.equal(interval, ONE_DAY);
 
-      assert(messaging.broadcastMessage.callCount, 2);
+      assert.equal(messaging.broadcastMessage.callCount, 5);
 
-      {
-        const event = messaging.broadcastMessage.calls[0].args[0];
+      messaging.broadcastMessage.calls.slice(0, 3).forEach(call => {
+        const event = call.args[0];
 
-        // I sent the event
         assert.equal(event.from, "licensing");
-        // it's a log event
-        assert.equal(event.topic, "licensing-update");
 
-        assert(event.subscriptions);
+        switch (event.topic) {
+          case "licensing-update": {
+            assert(event.subscriptions);
 
-        const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
-        assert(rpp);
-        assert(rpp.active);
+            const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
+            assert(rpp);
+            assert(rpp.active);
 
-        const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
-        assert(storage);
-        // cache file marks it as not active
-        assert(!storage.active);
-      }
+            const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
+            assert(storage);
+            // cache file marks it as not active
+            assert(!storage.active);
 
-      {
-        const event = messaging.broadcastMessage.calls[1].args[0];
+            break;
+          }
 
-        // I sent the event
+          case 'rpp-licensing-update':
+
+            assert(event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'RPP authorized');
+            break;
+
+          case 'storage-licensing-update':
+
+            assert(!event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'Rise Storage not authorized');
+            break;
+
+          default: assert.fail();
+        }
+      });
+
+      messaging.broadcastMessage.calls.slice(3).forEach(call => {
+        const event = call.args[0];
+
         assert.equal(event.from, "licensing");
-        // it's a log event
-        assert.equal(event.topic, "licensing-update");
 
-        assert(event.subscriptions);
+        switch (event.topic) {
+          case "licensing-update": {
+            assert(event.subscriptions);
 
-        const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
-        assert(rpp);
-        assert(rpp.active);
+            const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
+            assert(rpp);
+            assert(rpp.active);
 
-        const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
-        assert(storage);
-        // API call says it's active
-        assert(storage.active);
-      }
+            const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
+            assert(storage);
+            // cache file marks it as not active
+            assert(storage.active);
+
+            break;
+          }
+
+          case 'storage-licensing-update':
+
+            assert(event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+            break;
+
+          default: assert.fail();
+        }
+      });
+
+      assert.equal(messaging.broadcastToLocalWS.callCount, 3);
+
+      messaging.broadcastToLocalWS.calls.forEach(call => {
+        const event = call.args[0];
+
+        assert.equal(event.from, "licensing");
+
+        switch (event.topic) {
+          case 'rpp-licensing-update':
+
+            assert(event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'RPP authorized');
+            break;
+
+          case 'storage-licensing-update':
+
+            assert(/Rise Storage.+authorized/.test(event.userFriendlyStatus));
+            break;
+
+          default: assert.fail();
+        }
+      });
 
       action().then(() => {
         // no more broadcasts
-        assert(messaging.broadcastMessage.callCount, 2);
+        assert.equal(messaging.broadcastMessage.callCount, 5);
+        assert.equal(messaging.broadcastToLocalWS.callCount, 3);
 
         return eventHandler({topic: "licensing-request"});
       })
       .then(() => {
         // forced broadcast, same event as current.
-        assert(messaging.broadcastMessage.callCount, 3);
+        assert.equal(messaging.broadcastMessage.callCount, 8);
 
-        const event = messaging.broadcastMessage.lastCall.args[0];
+        messaging.broadcastMessage.calls.slice(5).forEach(call => {
+          const event = call.args[0];
 
-        // I sent the event
-        assert.equal(event.from, "licensing");
-        // it's a log event
-        assert.equal(event.topic, "licensing-update");
+          assert.equal(event.from, "licensing");
 
-        assert(event.subscriptions);
+          switch (event.topic) {
+            case "licensing-update": {
+              assert(event.subscriptions);
 
-        const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
-        assert(rpp);
-        assert(rpp.active);
+              const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
+              assert(rpp);
+              assert(rpp.active);
 
-        const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
-        assert(storage);
-        assert(storage.active);
+              const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
+              assert(storage);
+              // cache file marks it as not active
+              assert(storage.active);
+
+              break;
+            }
+
+            case 'rpp-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'RPP authorized');
+              break;
+
+            case 'storage-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+              break;
+
+            default: assert.fail();
+          }
+        });
+
+        assert.equal(messaging.broadcastToLocalWS.callCount, 5);
+
+        messaging.broadcastToLocalWS.calls.slice(3).forEach(call => {
+          const event = call.args[0];
+
+          assert.equal(event.from, "licensing");
+
+          switch (event.topic) {
+            case 'rpp-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'RPP authorized');
+              break;
+
+            case 'storage-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+              break;
+
+            default: assert.fail();
+          }
+        });
 
         done();
       })

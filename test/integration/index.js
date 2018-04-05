@@ -112,7 +112,8 @@ describe("Licensing - Integration", ()=>
   {
     const settings = {displayid: "DIS123"};
 
-    simple.mock(messaging, "broadcastMessage").returnWith();
+    simple.mock(messaging, "broadcastMessage").resolveWith();
+    simple.mock(messaging, "broadcastToLocalWS").resolveWith();
     simple.mock(messaging, "getClientList").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(common, "getModuleVersion").returnWith("1.1");
@@ -200,13 +201,12 @@ describe("Licensing - Integration", ()=>
     licensing.run((action, interval) => {
       assert.equal(interval, ONE_DAY);
 
-      // licensing-storage and the RPP licensing watch
-      assert.equal(messaging.broadcastMessage.callCount, 2);
+      // 3 licensing updates and the RPP licensing watch
+      assert.equal(messaging.broadcastMessage.callCount, 4);
 
       messaging.broadcastMessage.calls.forEach(call => {
         const event = call.args[0];
 
-        // I sent the event
         assert.equal(event.from, "licensing");
 
         switch (event.topic) {
@@ -224,6 +224,16 @@ describe("Licensing - Integration", ()=>
             break;
           }
 
+          case 'rpp-licensing-update':
+            assert(event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'RPP authorized');
+            break;
+
+          case 'storage-licensing-update':
+            assert(!event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'Rise Storage not authorized');
+            break;
+
           case "watch":
             assert.equal(event.filePath, 'risevision-display-notifications/DIS123/authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json');
 
@@ -233,55 +243,170 @@ describe("Licensing - Integration", ()=>
         }
       });
 
-      action().then(() => {
-        assert.equal(messaging.broadcastMessage.callCount, 3);
+      // 2 licensing updates
+      assert.equal(messaging.broadcastToLocalWS.callCount, 2);
 
-        const event = messaging.broadcastMessage.lastCall.args[0];
+      messaging.broadcastToLocalWS.calls.forEach(call => {
+        const event = call.args[0];
 
-        // I sent the event
         assert.equal(event.from, "licensing");
-        // it's a log event
-        assert.equal(event.topic, "licensing-update");
 
-        assert(event.subscriptions);
+        switch (event.topic) {
+          case 'rpp-licensing-update':
+            assert(event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'RPP authorized');
+            break;
 
-        const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
-        assert(rpp);
-        assert(rpp.active);
+          case 'storage-licensing-update':
+            assert(!event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'Rise Storage not authorized');
+            break;
 
-        const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
-        assert(storage);
-        // active on next iterations
-        assert(storage.active);
+          default: assert.fail();
+        }
+      });
+
+      action().then(() => {
+        assert.equal(messaging.broadcastMessage.callCount, 6);
+
+        messaging.broadcastMessage.calls.slice(4).forEach(call => {
+          const event = call.args[0];
+
+          assert.equal(event.from, "licensing");
+
+          switch (event.topic) {
+            case "licensing-update": {
+              assert(event.subscriptions);
+
+              const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
+              assert(rpp);
+              assert(rpp.active);
+
+              const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
+              assert(storage);
+              // now active
+              assert(storage.active);
+              break;
+            }
+
+            case 'storage-licensing-update':
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+              break;
+
+            default: assert.fail();
+          }
+        });
+
+        assert.equal(messaging.broadcastToLocalWS.callCount, 3);
+
+        const event = messaging.broadcastToLocalWS.lastCall.args[0];
+        assert.equal(event.from, "licensing");
+        assert(event.isAuthorized);
+        assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
 
         return action();
       })
       .then(() => {
         // no more broadcasts
-        assert.equal(messaging.broadcastMessage.callCount, 3);
+        assert.equal(messaging.broadcastMessage.callCount, 6);
+        assert.equal(messaging.broadcastToLocalWS.callCount, 3);
 
         return eventHandler({topic: "licensing-request"});
       })
       .then(() => {
         // forced broadcast, same event as current.
-        assert.equal(messaging.broadcastMessage.callCount, 4);
+        assert.equal(messaging.broadcastMessage.callCount, 9);
+
+        messaging.broadcastMessage.calls.slice(6).forEach(call => {
+          const event = call.args[0];
+
+          assert.equal(event.from, "licensing");
+
+          switch (event.topic) {
+            case "licensing-update": {
+              assert(event.subscriptions);
+
+              const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
+              assert(rpp);
+              assert(rpp.active);
+
+              const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
+              assert(storage);
+              // not active on first iteration
+              assert(storage.active);
+              break;
+            }
+
+            case 'rpp-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'RPP authorized');
+              break;
+
+            case 'storage-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+              break;
+
+            default: assert.fail();
+          }
+        });
+
+        assert.equal(messaging.broadcastToLocalWS.callCount, 5);
+
+        messaging.broadcastToLocalWS.calls.slice(3).forEach(call => {
+          const event = call.args[0];
+
+          assert.equal(event.from, "licensing");
+
+          switch (event.topic) {
+            case 'rpp-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'RPP authorized');
+              break;
+
+            case 'storage-licensing-update':
+
+              assert(event.isAuthorized);
+              assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+              break;
+
+            default: assert.fail();
+          }
+        });
+
+        return eventHandler({topic: "rpp-licensing-request"});
+      })
+      .then(() => {
+        assert.equal(messaging.broadcastMessage.callCount, 10);
 
         const event = messaging.broadcastMessage.lastCall.args[0];
 
-        // I sent the event
         assert.equal(event.from, "licensing");
-        // it's a log event
-        assert.equal(event.topic, "licensing-update");
+        assert.equal(event.topic, "rpp-licensing-update");
+        assert(event.isAuthorized);
+        assert.equal(event.userFriendlyStatus, 'RPP authorized');
 
-        assert(event.subscriptions);
+        assert.equal(messaging.broadcastToLocalWS.callCount, 6);
+        assert.deepEqual(messaging.broadcastToLocalWS.lastCall.args[0], event);
 
-        const rpp = event.subscriptions.c4b368be86245bf9501baaa6e0b00df9719869fd;
-        assert(rpp);
-        assert(rpp.active);
+        return eventHandler({topic: "storage-licensing-request"});
+      })
+      .then(() => {
+        assert.equal(messaging.broadcastMessage.callCount, 11);
 
-        const storage = event.subscriptions.b0cba08a4baa0c62b8cdc621b6f6a124f89a03db;
-        assert(storage);
-        assert(storage.active);
+        const event = messaging.broadcastMessage.lastCall.args[0];
+
+        assert.equal(event.from, "licensing");
+        assert.equal(event.topic, "storage-licensing-update");
+        assert(event.isAuthorized);
+        assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+
+        assert.equal(messaging.broadcastToLocalWS.callCount, 7);
+        assert.deepEqual(messaging.broadcastToLocalWS.lastCall.args[0], event);
 
         done();
       })

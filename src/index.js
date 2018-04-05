@@ -1,5 +1,6 @@
 /* eslint-disable default-case, function-paren-newline, no-unused-expressions, no-unused-vars */
 
+const commonLicensing = require("common-display-module/licensing");
 const messaging = require("common-display-module/messaging");
 const config = require("./config");
 const iterations = require("./iterations");
@@ -16,6 +17,10 @@ function configureMessagingHandlers(receiver, schedule) {
         return watch.sendWatchMessages(message);
       case "LICENSING-REQUEST":
         return subscriptions.broadcastSubscriptionData();
+      case "RPP-LICENSING-REQUEST":
+        return subscriptions.broadcastSubscriptionDataForCode(commonLicensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE);
+      case "STORAGE-LICENSING-REQUEST":
+        return subscriptions.broadcastSubscriptionDataForCode(commonLicensing.RISE_STORAGE_PRODUCT_CODE);
       case "FILE-UPDATE":
         return watch.handleFileUpdate(message, schedule)
     }

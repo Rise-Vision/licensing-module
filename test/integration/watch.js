@@ -16,10 +16,15 @@ const watch = require("../../src/watch");
 
 describe("Watch - Integration", () => {
 
+  before(() => {
+    config.setCompanyId(null);
+    watch.clearMessagesAlreadySentFlag()
+  });
+
   beforeEach(() => {
     const settings = {displayid: "DIS123"};
 
-    simple.mock(messaging, "broadcastMessage").returnWith();
+    simple.mock(messaging, "broadcastMessage").resolveWith();
     simple.mock(messaging, "getClientList").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(common, "getModuleVersion").returnWith("1.1");
@@ -30,7 +35,7 @@ describe("Watch - Integration", () => {
   });
 
   afterEach(() => {
-    simple.restore()
+    simple.restore();
     watch.clearMessagesAlreadySentFlag();
     config.setCompanyId(null);
     iterations.stop();

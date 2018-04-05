@@ -15,7 +15,8 @@ describe("Subscriptions - Integration", () => {
 
   beforeEach(() => {
     simple.mock(Date, "now").returnWith(100);
-    simple.mock(messaging, "broadcastMessage").returnWith();
+    simple.mock(messaging, "broadcastMessage").resolveWith();
+    simple.mock(messaging, "broadcastToLocalWS").resolveWith();
     simple.mock(persistence, "saveAndReport").resolveWith();
     simple.mock(platform, "fileExists").returnWith(true);
     simple.mock(logger, "file").returnWith();
@@ -37,16 +38,40 @@ describe("Subscriptions - Integration", () => {
       ospath: "xxxxxxx"
     })
     .then(() => {
-      assert.equal(messaging.broadcastMessage.callCount, 1);
-      assert.deepEqual(messaging.broadcastMessage.lastCall.args[0], {
-        from: "licensing",
-        topic: "licensing-update",
-        subscriptions: {
-          c4b368be86245bf9501baaa6e0b00df9719869fd: {
-            active: true, timestamp: 100
-          }
+
+      assert.equal(messaging.broadcastMessage.callCount, 2);
+
+      messaging.broadcastMessage.calls.forEach(call => {
+        const event = call.args[0];
+
+        assert.equal(event.from, 'licensing');
+
+        switch (event.topic) {
+          case "licensing-update":
+            assert.deepEqual(event.subscriptions, {
+              c4b368be86245bf9501baaa6e0b00df9719869fd: {
+                active: true, timestamp: 100
+              }
+            });
+
+            break;
+
+          case "rpp-licensing-update":
+            assert(event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'RPP authorized');
+            break;
+
+          default: assert.fail();
         }
       });
+
+      assert.equal(messaging.broadcastToLocalWS.callCount, 1);
+      const event = messaging.broadcastToLocalWS.lastCall.args[0];
+
+      assert.equal(event.from, 'licensing');
+      assert.equal(event.topic, "rpp-licensing-update");
+      assert(event.isAuthorized);
+      assert.equal(event.userFriendlyStatus, 'RPP authorized');
     });
   });
 
@@ -60,16 +85,39 @@ describe("Subscriptions - Integration", () => {
       ospath: "xxxxxxx"
     })
     .then(() => {
-      assert.equal(messaging.broadcastMessage.callCount, 1);
-      assert.deepEqual(messaging.broadcastMessage.lastCall.args[0], {
-        from: "licensing",
-        topic: "licensing-update",
-        subscriptions: {
-          c4b368be86245bf9501baaa6e0b00df9719869fd: {
-            active: false, timestamp: 100
-          }
+      assert.equal(messaging.broadcastMessage.callCount, 2);
+
+      messaging.broadcastMessage.calls.forEach(call => {
+        const event = call.args[0];
+
+        assert.equal(event.from, 'licensing');
+
+        switch (event.topic) {
+          case "licensing-update":
+            assert.deepEqual(event.subscriptions, {
+              c4b368be86245bf9501baaa6e0b00df9719869fd: {
+                active: false, timestamp: 100
+              }
+            });
+
+            break;
+
+          case "rpp-licensing-update":
+            assert(!event.isAuthorized);
+            assert.equal(event.userFriendlyStatus, 'RPP not authorized');
+            break;
+
+          default: assert.fail();
         }
       });
+
+      assert.equal(messaging.broadcastToLocalWS.callCount, 1);
+      const event = messaging.broadcastToLocalWS.lastCall.args[0];
+
+      assert.equal(event.from, 'licensing');
+      assert.equal(event.topic, "rpp-licensing-update");
+      assert(!event.isAuthorized);
+      assert.equal(event.userFriendlyStatus, 'RPP not authorized');
     });
   });
 
