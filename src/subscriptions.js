@@ -46,8 +46,17 @@ function broadcastSubscriptionData(codes = supportedProductCodes) {
 }
 
 function broadcastSubscriptionDataForCode(code) {
-  return currentSubscriptionStatusTable[code] &&
-    broadcastSimpleLicensingMessages(currentSubscriptionStatusTable[code], code);
+  logger.file(`subscription data requested for ${code}`);
+
+  const subscription = currentSubscriptionStatusTable[code];
+
+  if (!subscription) {
+    logger.file(`currently do not have subscription data for ${code}`);
+
+    return;
+  }
+
+  broadcastSimpleLicensingMessages(currentSubscriptionStatusTable[code], code);
 }
 
 function broadcastSimpleLicensingMessages(subscription, code) {
@@ -68,6 +77,8 @@ function broadcastSimpleLicensingMessages(subscription, code) {
   else {
     return Promise.resolve();
   }
+
+  logger.file(`sending simple licensing message: ${JSON.stringify(simpleMessage)}`);
 
   return Promise.all([
     messaging.broadcastMessage(simpleMessage),
