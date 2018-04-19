@@ -100,7 +100,7 @@ describe("Watch - Integration", () => {
 
     simple.mock(messaging, "receiveMessages").resolveWith(new Receiver());
 
-    licensing.run(() => {}, () => {});
+    licensing.run(() => {});
   });
 
 });

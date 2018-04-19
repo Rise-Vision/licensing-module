@@ -31,9 +31,9 @@ function configureMessagingHandlers(receiver, schedule) {
   return logger.all("started");
 }
 
-function run(schedule = setInterval, scheduleDeprecated = setInterval) {
+function run(schedule = setInterval) {
   return persistence.retrieve()
-  .then(data =>{
+  .then(data => {
     const {companyId, licensing} = data;
 
     messaging.receiveMessages(config.moduleName).then(receiver =>
