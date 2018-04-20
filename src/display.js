@@ -1,10 +1,24 @@
+const messaging = require("common-display-module/messaging");
+const config = require("./config");
+
+let displayData = null;
+
 function broadcastDisplayData() {
-  console.log('broadcastDisplayData');
-  return Promise.resolve();
+  if (!displayData) {
+    return Promise.reject(new Error("Display data not set"));
+  }
+
+  const message = {
+    from: config.moduleName,
+    topic: "display-data-update",
+    displayData
+  };
+
+  return messaging.broadcastMessage(message);
 }
 
 function saveDisplayData(data) {
-  console.log(`save display data ${data}`);
+  displayData = data;
   return Promise.resolve();
 }
 
