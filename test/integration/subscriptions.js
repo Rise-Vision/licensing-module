@@ -1,6 +1,3 @@
-/* eslint-env mocha */
-/* eslint-disable no-magic-numbers */
-
 const assert = require("assert");
 const messaging = require("common-display-module/messaging");
 const platform = require("rise-common-electron").platform;

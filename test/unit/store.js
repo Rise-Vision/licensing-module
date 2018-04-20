@@ -1,5 +1,3 @@
-/* eslint-env mocha */
-/* eslint-disable max-statements, no-magic-numbers */
 const assert = require("assert");
 const simple = require("simple-mock");
 const common = require("common-display-module");
@@ -7,11 +5,9 @@ const common = require("common-display-module");
 const config = require("../../src/config");
 const store = require("../../src/store");
 
-describe("Store - Unit", ()=>
-{
+describe("Store - Unit", () => {
 
-  beforeEach(()=>
-  {
+  beforeEach(() => {
     const settings = {displayid: "DIS123"};
 
     config.setCompanyId("123");
@@ -20,7 +16,7 @@ describe("Store - Unit", ()=>
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
   });
 
-  afterEach(()=> {
+  afterEach(() => {
     simple.restore()
     config.setCompanyId(null);
   });

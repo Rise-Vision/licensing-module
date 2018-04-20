@@ -1,16 +1,12 @@
-/* eslint-env mocha */
-/* eslint-disable max-statements */
 const assert = require("assert");
 const simple = require("simple-mock");
 const common = require("common-display-module");
 
 const config = require("../../src/config");
 
-describe("Config - Unit", ()=>
-{
+describe("Config - Unit", () => {
 
-  beforeEach(()=>
-  {
+  beforeEach(() => {
     simple.mock(common, "getModuleVersion").returnWith("1.1");
     simple.mock(common, "getInstallDir").returnWith("/home/rise/rvplayer");
   });

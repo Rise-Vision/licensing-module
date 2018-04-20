@@ -1,5 +1,4 @@
-/* eslint-env mocha */
-/* eslint-disable max-statements, no-magic-numbers, function-paren-newline, space-infix-ops */
+/* eslint-disable max-lines, function-paren-newline */
 const assert = require("assert");
 const common = require("common-display-module");
 const messaging = require("common-display-module/messaging");
@@ -105,16 +104,14 @@ const content = `
 }
 `
 
-describe("Licensing - Integration", ()=>
-{
+describe("Licensing - Integration", () => {
 
   before(() => {
     config.setCompanyId(null);
     watch.clearMessagesAlreadySentFlag()
   });
 
-  beforeEach(() =>
-  {
+  beforeEach(() => {
     const settings = {displayid: "DIS123"};
 
     simple.mock(messaging, "broadcastMessage").resolveWith();
@@ -129,7 +126,7 @@ describe("Licensing - Integration", ()=>
 
     simple.mock(platform, "readTextFile").callFn(path => {
       return Promise.resolve(
-        path.endsWith('/licensing-cache.json')? '{}' : content
+        path.endsWith('/licensing-cache.json') ? '{}' : content
       );
     });
 

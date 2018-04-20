@@ -1,5 +1,3 @@
-/* eslint-env mocha */
-/* eslint-disable max-statements, no-magic-numbers */
 const assert = require("assert");
 const common = require("common-display-module");
 const simple = require("simple-mock");
@@ -10,17 +8,15 @@ const logger = require("../../src/logger");
 const persistence = require("../../src/persistence");
 const subscriptions = require("../../src/subscriptions");
 
-describe("Persistence - Unit", ()=>
-{
+describe("Persistence - Unit", () => {
 
-  beforeEach(()=>
-  {
+  beforeEach(() => {
     simple.mock(platform, "writeTextFile").resolveWith(true);
     simple.mock(common, "getModuleVersion").returnWith("1.1");
     simple.mock(common, "getInstallDir").returnWith("/home/rise/rvplayer");
   });
 
-  afterEach(()=> {
+  afterEach(() => {
     simple.restore()
     config.setCompanyId(null);
   });

@@ -1,5 +1,3 @@
-/* eslint-disable no-magic-numbers */
-
 const config = require("../../src/config");
 const store = require("../../src/store");
 

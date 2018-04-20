@@ -1,5 +1,3 @@
-/* eslint-env mocha */
-/* eslint-disable max-statements, no-magic-numbers */
 const assert = require("assert");
 const logger = require("../../src/logger");
 const common = require("common-display-module");
@@ -117,7 +115,7 @@ const mockDisplay = `{
   }
 }`;
 
-describe("Watch - Unit", ()=> {
+describe("Watch - Unit", () => {
 
   beforeEach(()=> {
     const settings = {displayid: "DIS123"};
@@ -133,7 +131,7 @@ describe("Watch - Unit", ()=> {
     simple.mock(subscriptions, "applyStatusUpdates").resolveWith(true);
   });
 
-  afterEach(()=> {
+  afterEach(() => {
     watch.clearMessagesAlreadySentFlag();
 
     simple.restore()

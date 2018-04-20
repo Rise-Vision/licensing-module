@@ -1,5 +1,4 @@
-/* eslint-env mocha */
-/* eslint-disable max-statements, no-magic-numbers, no-inline-comments, line-comment-position */
+/* eslint-disable no-inline-comments, line-comment-position */
 const assert = require("assert");
 const simple = require("simple-mock");
 

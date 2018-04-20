@@ -1,6 +1,14 @@
 {
+  "env": {
+    "es6": true,
+    "node": true,
+    "mocha": true
+  },
+  "parserOptions": {
+    "sourceType": "module"
+  },
   "rules": {
-    "max-lines": "off",
-    "max-statements": "off"
+    "max-statements": "off",
+    "no-magic-numbers": "off"
   }
 }

@@ -1,5 +1,3 @@
-/* eslint-env mocha */
-/* eslint-disable max-statements */
 const assert = require("assert");
 const common = require("common-display-module");
 const messaging = require("common-display-module/messaging");
@@ -8,11 +6,9 @@ const simple = require("simple-mock");
 const config = require("../../src/config");
 const logger = require("../../src/logger");
 
-describe("Logger - Unit", ()=>
-{
+describe("Logger - Unit", () => {
 
-  beforeEach(()=>
-  {
+  beforeEach(() => {
     config.setCompanyId('123');
     const settings = {displayid: "DIS123"};
 
@@ -22,7 +18,7 @@ describe("Logger - Unit", ()=>
     simple.mock(logger, "file").returnWith();
   });
 
-  afterEach(()=> {
+  afterEach(() => {
     simple.restore()
     config.setCompanyId(null);
   });
