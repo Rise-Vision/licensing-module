@@ -26,6 +26,7 @@ describe("Subscriptions - Integration", () => {
   afterEach(() => {
     simple.restore()
     subscriptions.clear();
+    watch.clearMessagesAlreadySentFlag();
   });
 
   it("should extract active RPP license from authorization file and broadcast", () => {
