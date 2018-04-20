@@ -207,14 +207,14 @@ describe("Licensing - Integration", ()=>
       assert.equal(interval, ONE_DAY);
 
       // 3 licensing updates plus content, display and RPP licensing watch
-      assert.equal(messaging.broadcastMessage.callCount, 5);
+      assert.equal(messaging.broadcastMessage.callCount, 6);
 
       messaging.broadcastMessage.calls.forEach(call => {
         const event = call.args[0];
 
         assert.equal(event.from, "licensing");
 
-        const wathPathRegex = new RegExp('^risevision-display-notifications/DIS123/(content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$');
+        const wathPathRegex = new RegExp('^risevision-display-notifications/DIS123/(display|content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$');
 
         switch (event.topic) {
           case "licensing-update": {
@@ -274,9 +274,9 @@ describe("Licensing - Integration", ()=>
       });
 
       action().then(() => {
-        assert.equal(messaging.broadcastMessage.callCount, 7);
+        assert.equal(messaging.broadcastMessage.callCount, 8);
 
-        messaging.broadcastMessage.calls.slice(5).forEach(call => {
+        messaging.broadcastMessage.calls.slice(6).forEach(call => {
           const event = call.args[0];
 
           assert.equal(event.from, "licensing");
@@ -316,16 +316,16 @@ describe("Licensing - Integration", ()=>
       })
       .then(() => {
         // no more broadcasts
-        assert.equal(messaging.broadcastMessage.callCount, 7);
+        assert.equal(messaging.broadcastMessage.callCount, 8);
         assert.equal(messaging.broadcastToLocalWS.callCount, 3);
 
         return eventHandler({topic: "licensing-request"});
       })
       .then(() => {
         // forced broadcast, same event as current.
-        assert.equal(messaging.broadcastMessage.callCount, 10);
+        assert.equal(messaging.broadcastMessage.callCount, 11);
 
-        messaging.broadcastMessage.calls.slice(6).forEach(call => {
+        messaging.broadcastMessage.calls.slice(7).forEach(call => {
           const event = call.args[0];
 
           assert.equal(event.from, "licensing");
@@ -388,7 +388,7 @@ describe("Licensing - Integration", ()=>
         return eventHandler({topic: "rpp-licensing-request"});
       })
       .then(() => {
-        assert.equal(messaging.broadcastMessage.callCount, 11);
+        assert.equal(messaging.broadcastMessage.callCount, 12);
 
         const event = messaging.broadcastMessage.lastCall.args[0];
 
@@ -403,7 +403,7 @@ describe("Licensing - Integration", ()=>
         return eventHandler({topic: "storage-licensing-request"});
       })
       .then(() => {
-        assert.equal(messaging.broadcastMessage.callCount, 12);
+        assert.equal(messaging.broadcastMessage.callCount, 13);
 
         const event = messaging.broadcastMessage.lastCall.args[0];
 

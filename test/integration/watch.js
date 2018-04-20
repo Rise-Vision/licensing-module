@@ -73,10 +73,10 @@ describe("Watch - Integration", () => {
         .then(() =>
         {
           // so WATCH messages should have been sent
-          assert.equal(messaging.broadcastMessage.callCount, 2);
+          assert.equal(messaging.broadcastMessage.callCount, 3);
 
           const pathRegex =
-            new RegExp('^risevision-display-notifications/DIS123/(content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$')
+            new RegExp('^risevision-display-notifications/DIS123/(display|content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$')
 
           messaging.broadcastMessage.calls.forEach(call => {
             const event = call.args[0];
