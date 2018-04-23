@@ -178,7 +178,7 @@ describe("Watch - Unit", () => {
     });
   });
 
-  it("should extract customer id from content file", ()=>{
+  it("should extract company id from content file", () => {
     simple.mock(platform, "readTextFile").resolveWith(mockContent);
 
     return watch.handleFileUpdate({
@@ -288,6 +288,7 @@ describe("Watch - Unit", () => {
     })
     .then(() => {
       assert.ok(display.saveDisplayData.called);
+      assert.ok(iterations.ensureLicensingLoopIsRunning.called);
     });
   });
 

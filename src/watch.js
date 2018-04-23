@@ -107,6 +107,17 @@ function loadCompanyIdFromContent(json, data, schedule) {
   return logger.error(`Company id could not be retrieved from content: ${data}`);
 }
 
+function loadCompanyIdFromDisplayData(json, data, schedule) {
+  if (json.companyId) {
+    const companyId = json.companyId;
+
+    return iterations.configureAndStartIfCompanyIdIsAvailable(companyId, null, schedule)
+    .then(() => display.saveDisplayData(json));
+  }
+
+  return logger.error(`Company id could not be retrieved from display data: ${data}`);
+}
+
 function loadRppAuthorization(json, data) {
   if (typeof json.authorized === 'boolean') {
     const timestamp = Date.now();
@@ -160,8 +171,8 @@ function handleFileUpdate(message, schedule = setInterval) {
   }
 
   if (message.filePath.endsWith("/display.json")) {
-    return receiveJsonFile(message, 'display', json =>
-      display.saveDisplayData(json));
+    return receiveJsonFile(message, 'display', (json, data) =>
+      loadCompanyIdFromDisplayData(json, data, schedule));
   }
 }
 
