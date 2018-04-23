@@ -19,7 +19,10 @@ function broadcastDisplayData() {
 
 function saveDisplayData(data) {
   displayData = data;
-  return Promise.resolve();
+  if (!displayData) {
+    return Promise.resolve();
+  }
+  return broadcastDisplayData();
 }
 
 module.exports = {

@@ -54,5 +54,21 @@ describe("Display - Unit", () => {
     });
   });
 
+  it("should broadcast display data when saving it", () => {
+
+    return display.saveDisplayData(displayData)
+    .then(() => {
+      assert.ok(messaging.broadcastMessage.called);
+
+      const expectedMessage = {
+        from: "licensing",
+        topic: "display-data-update",
+        displayData
+      };
+
+      assert.deepEqual(messaging.broadcastMessage.lastCall.arg, expectedMessage);
+    });
+  });
+
 
 });
