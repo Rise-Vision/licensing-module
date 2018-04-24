@@ -8,6 +8,7 @@ const logger = require("./logger");
 const persistence = require("./persistence");
 const subscriptions = require("./subscriptions");
 const watch = require("./watch");
+const display = require("./display");
 
 function configureMessagingHandlers(receiver, schedule) {
   receiver.on("message", message => {
@@ -17,6 +18,8 @@ function configureMessagingHandlers(receiver, schedule) {
         return watch.sendWatchMessages(message);
       case "LICENSING-REQUEST":
         return subscriptions.broadcastSubscriptionData();
+      case "DISPLAY-DATA-REQUEST":
+        return display.broadcastDisplayData();
       case "RPP-LICENSING-REQUEST":
         return subscriptions.broadcastSubscriptionDataForCode(commonLicensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE);
       case "STORAGE-LICENSING-REQUEST":
@@ -31,9 +34,9 @@ function configureMessagingHandlers(receiver, schedule) {
   return logger.all("started");
 }
 
-function run(schedule = setInterval, scheduleDeprecated = setInterval) {
+function run(schedule = setInterval) {
   return persistence.retrieve()
-  .then(data =>{
+  .then(data => {
     const {companyId, licensing} = data;
 
     messaging.receiveMessages(config.moduleName).then(receiver =>

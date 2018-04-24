@@ -1,5 +1,3 @@
-/* eslint-env mocha */
-/* eslint-disable max-statements, no-magic-numbers */
 const assert = require("assert");
 const logger = require("../../src/logger");
 const common = require("common-display-module");
@@ -11,6 +9,7 @@ const config = require("../../src/config");
 const iterations = require("../../src/iterations");
 const persistence = require("../../src/persistence");
 const subscriptions = require("../../src/subscriptions");
+const display = require("../../src/display");
 const watch = require("../../src/watch");
 
 const mockContent = `
@@ -99,9 +98,24 @@ const mockContent = `
   "social": [],
   "signature": "23a5522c67a2c7fba6d42ee9a322bf042cb1acd5"
 }
-`
+`;
 
-describe("Watch - Unit", ()=> {
+const mockDisplay = `{
+  "companyId": "b918f23b-c227-454a-8117-ca6bafe753d3",
+  "companyName": "Company",
+  "claimID": "1234",
+  "displayName": "NUC 2 (Linux)",
+  "displayAddress": {
+    "street": "10000 Marshall Dr",
+    "unit": "",
+    "city": "Lenexa",
+    "province": "KS",
+    "country": "US",
+    "postalCode": "66215"
+  }
+}`;
+
+describe("Watch - Unit", () => {
 
   beforeEach(()=> {
     const settings = {displayid: "DIS123"};
@@ -117,7 +131,7 @@ describe("Watch - Unit", ()=> {
     simple.mock(subscriptions, "applyStatusUpdates").resolveWith(true);
   });
 
-  afterEach(()=> {
+  afterEach(() => {
     watch.clearMessagesAlreadySentFlag();
 
     simple.restore()
@@ -146,12 +160,12 @@ describe("Watch - Unit", ()=> {
       clients: ["logging", "system-metrics", "local-storage"]
     })
     .then(() => {
-      // so WATCH messages should have been sent for both authorization and content.json files
+      // so WATCH messages should have been sent for authorization, content.json and display files
       assert(messaging.broadcastMessage.called);
-      assert.equal(2, messaging.broadcastMessage.callCount);
+      assert.equal(messaging.broadcastMessage.callCount, 3);
 
       const pathRegex =
-        new RegExp('^risevision-display-notifications/DIS123/(content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$')
+        new RegExp('^risevision-display-notifications/DIS123/(display|content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$')
 
       messaging.broadcastMessage.calls.forEach(call => {
         const event = call.args[0];
@@ -159,12 +173,12 @@ describe("Watch - Unit", ()=> {
         assert(event);
         assert.equal(event.from, "licensing");
         assert.equal(event.topic, "watch");
-        assert(pathRegex.test(event.filePath));
+        assert.ok(pathRegex.test(event.filePath));
       });
     });
   });
 
-  it("should extract customer id from content file", ()=>{
+  it("should extract company id from content file", () => {
     simple.mock(platform, "readTextFile").resolveWith(mockContent);
 
     return watch.handleFileUpdate({
@@ -259,6 +273,22 @@ describe("Watch - Unit", ()=> {
     })
     .then(() => {
       assert(!subscriptions.applyStatusUpdates.called);
+    });
+  });
+
+  it("should save display data", () => {
+    simple.mock(display, "saveDisplayData").resolveWith();
+    simple.mock(platform, "readTextFile").resolveWith(mockDisplay);
+
+    return watch.handleFileUpdate({
+      topic: "file-update",
+      status: "CURRENT",
+      filePath: "risevision-display-notifications/xxx/display.json",
+      ospath: "xxxxxxx"
+    })
+    .then(() => {
+      assert.ok(display.saveDisplayData.called);
+      assert.ok(iterations.ensureLicensingLoopIsRunning.called);
     });
   });
 

@@ -1,5 +1,4 @@
-/* eslint-env mocha */
-/* eslint-disable max-statements, no-magic-numbers, function-paren-newline, space-infix-ops */
+/* eslint-disable max-lines, function-paren-newline */
 const assert = require("assert");
 const common = require("common-display-module");
 const messaging = require("common-display-module/messaging");
@@ -105,11 +104,14 @@ const content = `
 }
 `
 
-describe("Licensing - Integration", ()=>
-{
+describe("Licensing - Integration", () => {
 
-  beforeEach(() =>
-  {
+  before(() => {
+    config.setCompanyId(null);
+    watch.clearMessagesAlreadySentFlag()
+  });
+
+  beforeEach(() => {
     const settings = {displayid: "DIS123"};
 
     simple.mock(messaging, "broadcastMessage").resolveWith();
@@ -124,7 +126,7 @@ describe("Licensing - Integration", ()=>
 
     simple.mock(platform, "readTextFile").callFn(path => {
       return Promise.resolve(
-        path.endsWith('/licensing-cache.json')? '{}' : content
+        path.endsWith('/licensing-cache.json') ? '{}' : content
       );
     });
 
@@ -201,13 +203,15 @@ describe("Licensing - Integration", ()=>
     licensing.run((action, interval) => {
       assert.equal(interval, ONE_DAY);
 
-      // 3 licensing updates and the RPP licensing watch
-      assert.equal(messaging.broadcastMessage.callCount, 4);
+      // 3 licensing updates plus content, display and RPP licensing watch
+      assert.equal(messaging.broadcastMessage.callCount, 6);
 
       messaging.broadcastMessage.calls.forEach(call => {
         const event = call.args[0];
 
         assert.equal(event.from, "licensing");
+
+        const wathPathRegex = new RegExp('^risevision-display-notifications/DIS123/(display|content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$');
 
         switch (event.topic) {
           case "licensing-update": {
@@ -235,7 +239,7 @@ describe("Licensing - Integration", ()=>
             break;
 
           case "watch":
-            assert.equal(event.filePath, 'risevision-display-notifications/DIS123/authorization/c4b368be86245bf9501baaa6e0b00df9719869fd.json');
+            assert.ok(wathPathRegex.test(event.filePath), "watch file path");
 
             break;
 
@@ -267,9 +271,9 @@ describe("Licensing - Integration", ()=>
       });
 
       action().then(() => {
-        assert.equal(messaging.broadcastMessage.callCount, 6);
+        assert.equal(messaging.broadcastMessage.callCount, 8);
 
-        messaging.broadcastMessage.calls.slice(4).forEach(call => {
+        messaging.broadcastMessage.calls.slice(6).forEach(call => {
           const event = call.args[0];
 
           assert.equal(event.from, "licensing");
@@ -309,16 +313,16 @@ describe("Licensing - Integration", ()=>
       })
       .then(() => {
         // no more broadcasts
-        assert.equal(messaging.broadcastMessage.callCount, 6);
+        assert.equal(messaging.broadcastMessage.callCount, 8);
         assert.equal(messaging.broadcastToLocalWS.callCount, 3);
 
         return eventHandler({topic: "licensing-request"});
       })
       .then(() => {
         // forced broadcast, same event as current.
-        assert.equal(messaging.broadcastMessage.callCount, 9);
+        assert.equal(messaging.broadcastMessage.callCount, 11);
 
-        messaging.broadcastMessage.calls.slice(6).forEach(call => {
+        messaging.broadcastMessage.calls.slice(7).forEach(call => {
           const event = call.args[0];
 
           assert.equal(event.from, "licensing");
@@ -381,7 +385,7 @@ describe("Licensing - Integration", ()=>
         return eventHandler({topic: "rpp-licensing-request"});
       })
       .then(() => {
-        assert.equal(messaging.broadcastMessage.callCount, 10);
+        assert.equal(messaging.broadcastMessage.callCount, 12);
 
         const event = messaging.broadcastMessage.lastCall.args[0];
 
@@ -396,7 +400,7 @@ describe("Licensing - Integration", ()=>
         return eventHandler({topic: "storage-licensing-request"});
       })
       .then(() => {
-        assert.equal(messaging.broadcastMessage.callCount, 11);
+        assert.equal(messaging.broadcastMessage.callCount, 13);
 
         const event = messaging.broadcastMessage.lastCall.args[0];
 

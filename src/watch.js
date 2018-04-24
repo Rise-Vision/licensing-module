@@ -3,28 +3,31 @@
 const common = require("common-display-module");
 const licensing = require("common-display-module/licensing");
 const messaging = require("common-display-module/messaging");
+const platform = require("rise-common-electron").platform;
 const config = require("./config");
 const iterations = require("./iterations");
 const logger = require("./logger");
 const persistence = require("./persistence");
 const subscriptions = require("./subscriptions");
-const platform = require("rise-common-electron").platform;
+const display = require("./display");
 
 const rppProductCode = licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE;
 
 const displayConfigBucket = "risevision-display-notifications";
 
 // So we ensure it will only be sent once.
-let contentWatchMessageAlreadySent = false
-let authorizationWatchMessageAlreadySent = false
+let contentWatchMessageAlreadySent = false;
+let authorizationWatchMessageAlreadySent = false;
+let displayWatchMessageAlreadySent = false;
 
 function clearMessagesAlreadySentFlag() {
   contentWatchMessageAlreadySent = false;
-  authorizationWatchMessageAlreadySent = false
+  authorizationWatchMessageAlreadySent = false;
+  displayWatchMessageAlreadySent = false;
 }
 
 function sendWatchMessages(message) {
-  return Promise.all([sendContentWatch(message), sendRppLicenseWatch(message)]);
+  return Promise.all([sendContentWatch(message), sendRppLicenseWatch(message), sendDisplayWatch(message)]);
 }
 
 function sendContentWatch(message) {
@@ -66,6 +69,21 @@ function sendRppLicenseWatch(message) {
 
 }
 
+function sendDisplayWatch(message) {
+  if (displayWatchMessageAlreadySent) {
+    return Promise.resolve();
+  }
+
+  const clients = message.clients;
+  if (!clients.includes("local-storage")) {
+    return Promise.resolve();
+  }
+
+  return module.exports.sendWatchMessageFor("display.json")
+  .then(() => displayWatchMessageAlreadySent = true)
+  .catch(error => logger.file(error.stack, 'Error while sending display watch message'))
+}
+
 function sendWatchMessageFor(path) {
   return common.getDisplayId()
   .then(displayId =>
@@ -87,6 +105,17 @@ function loadCompanyIdFromContent(json, data, schedule) {
   }
 
   return logger.error(`Company id could not be retrieved from content: ${data}`);
+}
+
+function loadCompanyIdFromDisplayData(json, data, schedule) {
+  if (json.companyId) {
+    const companyId = json.companyId;
+
+    return iterations.configureAndStartIfCompanyIdIsAvailable(companyId, null, schedule)
+    .then(() => display.saveDisplayData(json));
+  }
+
+  return logger.error(`Company id could not be retrieved from display data: ${data}`);
 }
 
 function loadRppAuthorization(json, data) {
@@ -139,6 +168,11 @@ function handleFileUpdate(message, schedule = setInterval) {
   if (message.filePath.endsWith(`/${rppProductCode}.json`)) {
     return receiveJsonFile(message, 'RPP authorization', (json, data) =>
       loadRppAuthorization(json, data));
+  }
+
+  if (message.filePath.endsWith("/display.json")) {
+    return receiveJsonFile(message, 'display', (json, data) =>
+      loadCompanyIdFromDisplayData(json, data, schedule));
   }
 }
 

@@ -1,6 +1,3 @@
-/* eslint-env mocha */
-/* eslint-disable no-magic-numbers */
-
 const assert = require("assert");
 const messaging = require("common-display-module/messaging");
 const platform = require("rise-common-electron").platform;
@@ -26,6 +23,7 @@ describe("Subscriptions - Integration", () => {
   afterEach(() => {
     simple.restore()
     subscriptions.clear();
+    watch.clearMessagesAlreadySentFlag();
   });
 
   it("should extract active RPP license from authorization file and broadcast", () => {
