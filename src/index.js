@@ -17,6 +17,8 @@ function configureMessagingHandlers(receiver, schedule) {
       case "CLIENT-LIST":
         return watch.sendWatchMessages(message);
       case "LICENSING-REQUEST":
+        logger.file('licensing data requested');
+
         return subscriptions.broadcastSubscriptionData();
       case "DISPLAY-DATA-REQUEST":
         return display.broadcastDisplayData();

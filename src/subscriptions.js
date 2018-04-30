@@ -36,6 +36,8 @@ function broadcastSubscriptionData(codes = supportedProductCodes) {
     subscriptions: currentSubscriptionStatusTable
   };
 
+  logger.file(`broadcasting subscription data: ${JSON.stringify(message)}`);
+
   return messaging.broadcastMessage(message)
   .then(() => Promise.all(codes
     .filter(code => message.subscriptions[code])
