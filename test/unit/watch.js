@@ -123,6 +123,7 @@ describe("Watch - Unit", () => {
     simple.mock(Date, "now").returnWith(100);
     simple.mock(messaging, "broadcastMessage").returnWith();
     simple.mock(logger, "error").returnWith();
+    simple.mock(logger, "warning").returnWith();
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(platform, "fileExists").returnWith(true);
     simple.mock(iterations, "ensureLicensingLoopIsRunning").resolveWith(true);
@@ -211,7 +212,7 @@ describe("Watch - Unit", () => {
     });
   });
 
-  it("should report an error if content file has no company id", ()=>{
+  it("should report a warning if content file has no company id", ()=>{
     const mockScheduleText = '{"content": ""}';
     simple.mock(platform, "readTextFile").resolveWith(mockScheduleText);
 
@@ -222,7 +223,7 @@ describe("Watch - Unit", () => {
       ospath: "xxxxxxx"
     })
     .then(() => {
-      assert(logger.error.lastCall.args[0].startsWith("Company id could not be retrieved from content"));
+      assert(logger.warning.lastCall.args[0].startsWith("Company id could not be retrieved from content"));
 
       assert(!persistence.save.called);
     });

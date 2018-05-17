@@ -104,7 +104,7 @@ function loadCompanyIdFromContent(json, data, schedule) {
     .then(() => persistence.save(subscriptions.getSubscriptionData()));
   }
 
-  return logger.error(`Company id could not be retrieved from content: ${data}`);
+  return logger.warning(`Company id could not be retrieved from content: ${data}`);
 }
 
 function loadCompanyIdFromDisplayData(json, data, schedule) {

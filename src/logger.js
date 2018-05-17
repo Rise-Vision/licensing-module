@@ -24,6 +24,11 @@ function error(eventDetails, userFriendlyMessage) {
   .then(detail => logger.error(detail, userFriendlyMessage, bqTable));
 }
 
+function warning(eventDetails) {
+  return detailsFor(eventDetails)
+  .then(detail => logger.warning(detail, bqTable));
+}
+
 function all(eventType, eventDetails = "", data = {}) {
   return detailsFor(eventDetails, data)
     .then(detail => logger.all(eventType, detail, null, bqTable));
@@ -50,5 +55,6 @@ module.exports = {
   error,
   external,
   all,
-  logSubscriptionAPICallError
+  logSubscriptionAPICallError,
+  warning
 };
