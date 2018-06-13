@@ -7,7 +7,6 @@ const platform = require("rise-common-electron").platform;
 const config = require("./config");
 const iterations = require("./iterations");
 const logger = require("./logger");
-// const persistence = require("./persistence");
 const subscriptions = require("./subscriptions");
 const display = require("./display");
 

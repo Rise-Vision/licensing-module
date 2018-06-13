@@ -6,7 +6,6 @@ const simple = require("simple-mock");
 const platform = require("rise-common-electron").platform;
 
 const iterations = require("../../src/iterations");
-const persistence = require("../../src/persistence");
 const subscriptions = require("../../src/subscriptions");
 const display = require("../../src/display");
 const watch = require("../../src/watch");
@@ -38,8 +37,6 @@ describe("Watch - Unit", () => {
     simple.mock(common, "getDisplaySettings").resolveWith(settings);
     simple.mock(platform, "fileExists").returnWith(true);
     simple.mock(iterations, "ensureLicensingLoopIsRunning").resolveWith(true);
-    simple.mock(persistence, "save").resolveWith(true);
-    simple.mock(persistence, "saveAndReport").resolveWith(true);
     simple.mock(subscriptions, "applyStatusUpdates").resolveWith(true);
   });
 
