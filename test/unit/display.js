@@ -3,6 +3,7 @@ const simple = require("simple-mock");
 const messaging = require("common-display-module/messaging");
 
 const display = require("../../src/display");
+const persistence = require("../../src/persistence");
 
 const displayData = {
   "companyId": "b918f23b-c227-454a-8117-ca6bafe753d3",
@@ -23,6 +24,8 @@ describe("Display - Unit", () => {
 
   beforeEach(() => {
     simple.mock(messaging, "broadcastMessage").resolveWith();
+    simple.mock(persistence, "save").resolveWith(true);
+
     display.saveDisplayData(null);
   });
 
@@ -67,6 +70,7 @@ describe("Display - Unit", () => {
       };
 
       assert.deepEqual(messaging.broadcastMessage.lastCall.arg, expectedMessage);
+      assert(persistence.save.called);
     });
   });
 

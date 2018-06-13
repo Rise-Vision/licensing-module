@@ -7,7 +7,6 @@ const platform = require("rise-common-electron").platform;
 const config = require("./config");
 const iterations = require("./iterations");
 const logger = require("./logger");
-const persistence = require("./persistence");
 const subscriptions = require("./subscriptions");
 const display = require("./display");
 
@@ -16,37 +15,16 @@ const rppProductCode = licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE;
 const displayConfigBucket = "risevision-display-notifications";
 
 // So we ensure it will only be sent once.
-let contentWatchMessageAlreadySent = false;
 let authorizationWatchMessageAlreadySent = false;
 let displayWatchMessageAlreadySent = false;
 
 function clearMessagesAlreadySentFlag() {
-  contentWatchMessageAlreadySent = false;
   authorizationWatchMessageAlreadySent = false;
   displayWatchMessageAlreadySent = false;
 }
 
 function sendWatchMessages(message) {
-  return Promise.all([sendContentWatch(message), sendRppLicenseWatch(message), sendDisplayWatch(message)]);
-}
-
-function sendContentWatch(message) {
-  if (!contentWatchMessageAlreadySent && !config.getCompanyId()) {
-    logger.debug(JSON.stringify(message));
-
-    const clients = message.clients;
-
-    if (clients.includes("local-storage")) {
-      return module.exports.sendWatchMessageFor('content.json')
-      .then(() => contentWatchMessageAlreadySent = true)
-      .catch(error =>
-        logger.file(error.stack, 'Error while sending content watch message')
-      )
-    }
-  }
-
-  return Promise.resolve();
-
+  return Promise.all([sendRppLicenseWatch(message), sendDisplayWatch(message)]);
 }
 
 function sendRppLicenseWatch(message) {
@@ -93,18 +71,6 @@ function sendWatchMessageFor(path) {
         filePath: `${displayConfigBucket}/${displayId}/${path}`
      })
   );
-}
-
-function loadCompanyIdFromContent(json, data, schedule) {
-  // Note that if the display doesn't have a schedule assigned, licensing data won't be avaiable.
-  if (json.content && json.content.schedule && json.content.schedule.companyId) {
-    const companyId = json.content.schedule.companyId;
-
-    return iterations.configureAndStartIfCompanyIdIsAvailable(companyId, null, schedule)
-    .then(() => persistence.save(subscriptions.getSubscriptionData()));
-  }
-
-  return logger.warning(`Company id could not be retrieved from content: ${data}`);
 }
 
 function loadCompanyIdFromDisplayData(json, data, schedule) {
@@ -158,11 +124,6 @@ function receiveJsonFile(message, label, action) {
 function handleFileUpdate(message, schedule = setInterval) {
   if (!message.filePath || !message.filePath.startsWith(displayConfigBucket)) {
     return;
-  }
-
-  if (message.filePath.endsWith("/content.json")) {
-    return receiveJsonFile(message, 'content', (json, data) =>
-      loadCompanyIdFromContent(json, data, schedule));
   }
 
   if (message.filePath.endsWith(`/${rppProductCode}.json`)) {

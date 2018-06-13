@@ -1,5 +1,7 @@
 const messaging = require("common-display-module/messaging");
 const config = require("./config");
+const persistence = require("./persistence");
+const subscriptions = require("./subscriptions");
 
 let displayData = null;
 
@@ -22,7 +24,8 @@ function saveDisplayData(data) {
   if (!displayData) {
     return Promise.resolve();
   }
-  return broadcastDisplayData();
+  return broadcastDisplayData()
+  .then(() => persistence.save(subscriptions.getSubscriptionData()));
 }
 
 module.exports = {

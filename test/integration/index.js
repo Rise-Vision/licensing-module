@@ -16,93 +16,20 @@ const watch = require("../../src/watch");
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
-const content = `
-{
-  "content": {
-    "schedule": {
-      "id": "dc2ff914-6b9c-4296-9941-cec92c2ceaec",
-      "companyId": "176314ee-6b88-47ed-a354-10659722dc39",
-      "name": "sometimes nest pi",
-      "changeDate": "27122017200053754",
-      "transition": "",
-      "scale": "",
-      "position": "",
-      "distribution": ["7C4W7QQVSJEQ", "C93KGJC68GBN"],
-      "distributeToAll": false,
-      "timeDefined": false,
-      "recurrenceType": "Daily",
-      "recurrenceFrequency": 1,
-      "recurrenceAbsolute": false,
-      "recurrenceDayOfWeek": 0,
-      "recurrenceDayOfMonth": 0,
-      "recurrenceWeekOfMonth": 0,
-      "recurrenceMonthOfYear": 0,
-      "items": [{
-        "name": "countries",
-        "type": "presentation",
-        "objectReference": "d0b27c18-5f0b-48e8-944d-63857b6e852c",
-        "duration": 10,
-        "timeDefined": true,
-        "startDate": "12/27/2017 12:00:00 AM",
-        "startTime": "12/27/2017 2:15:00 PM",
-        "endTime": "12/27/2017 2:30:00 PM",
-        "recurrenceType": "Daily",
-        "recurrenceFrequency": 1,
-        "recurrenceAbsolute": true,
-        "recurrenceDaysOfWeek": [],
-        "recurrenceDayOfWeek": 0,
-        "recurrenceDayOfMonth": 1,
-        "recurrenceWeekOfMonth": 0,
-        "recurrenceMonthOfYear": 0
-      }, {
-        "name": "Copy of countries",
-        "type": "presentation",
-        "objectReference": "d0b27c18-5f0b-48e8-944d-63857b6e852c",
-        "duration": 10,
-        "timeDefined": true,
-        "startDate": "12/27/2017 12:00:00 AM",
-        "startTime": "12/27/2017 2:45:00 PM",
-        "endTime": "12/27/2017 2:59:00 PM",
-        "recurrenceType": "Daily",
-        "recurrenceFrequency": 1,
-        "recurrenceAbsolute": true,
-        "recurrenceDaysOfWeek": [],
-        "recurrenceDayOfWeek": 0,
-        "recurrenceDayOfMonth": 1,
-        "recurrenceWeekOfMonth": 0,
-        "recurrenceMonthOfYear": 0
-      }]
-    },
-    "presentations": [{
-      "id": "d0b27c18-5f0b-48e8-944d-63857b6e852c",
-      "companyId": "176314ee-6b88-47ed-a354-10659722dc39",
-      "name": "countries",
-      "changeDate": "22092017212306616",
-      "publish": 0,
-      "layout": "",
-      "distribution": [],
-      "isTemplate": false,
-      "revisionStatus": 1
-    }]
-  },
-  "display": {
-    "displayAddress": {
-      "street": "",
-      "unit": "",
-      "city": "",
-      "province": "",
-      "country": "",
-      "postalCode": ""
-    },
-    "authKey": "uJjhqfNhx7K6",
-    "restartEnabled": true,
-    "restartTime": "02:00",
-    "orientation": 0
-  },
-  "social": [],
-  "signature": "23a5522c67a2c7fba6d42ee9a322bf042cb1acd5"
-}
-`
+const mockDisplay = `{
+  "companyId": "176314ee-6b88-47ed-a354-10659722dc39",
+  "companyName": "Company",
+  "claimID": "1234",
+  "displayName": "NUC 2 (Linux)",
+  "displayAddress": {
+    "street": "10000 Marshall Dr",
+    "unit": "",
+    "city": "Lenexa",
+    "province": "KS",
+    "country": "US",
+    "postalCode": "66215"
+  }
+}`;
 
 describe("Licensing - Integration", () => {
 
@@ -126,7 +53,7 @@ describe("Licensing - Integration", () => {
 
     simple.mock(platform, "readTextFile").callFn(path => {
       return Promise.resolve(
-        path.endsWith('/licensing-cache.json') ? '{}' : content
+        path.endsWith('/licensing-cache.json') ? '{}' : mockDisplay
       );
     });
 
@@ -162,7 +89,7 @@ describe("Licensing - Integration", () => {
           handler({
             topic: "file-update",
             status: "CURRENT",
-            filePath: "risevision-display-notifications/dc2ff914-6b9c-4296-9941-cec92c2ceaec/content.json",
+            filePath: "risevision-display-notifications/dc2ff914-6b9c-4296-9941-cec92c2ceaec/display.json",
             ospath: "xxxxxx"
           })
         )
@@ -203,15 +130,15 @@ describe("Licensing - Integration", () => {
     licensing.run((action, interval) => {
       assert.equal(interval, ONE_DAY);
 
-      // 3 licensing updates plus content, display and RPP licensing watch
-      assert.equal(messaging.broadcastMessage.callCount, 6);
+      // 3 licensing updates plus display and RPP licensing watch
+      assert.equal(messaging.broadcastMessage.callCount, 5);
 
       messaging.broadcastMessage.calls.forEach(call => {
         const event = call.args[0];
 
         assert.equal(event.from, "licensing");
 
-        const wathPathRegex = new RegExp('^risevision-display-notifications/DIS123/(display|content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$');
+        const wathPathRegex = new RegExp('^risevision-display-notifications/DIS123/(display|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$');
 
         switch (event.topic) {
           case "licensing-update": {
@@ -271,9 +198,10 @@ describe("Licensing - Integration", () => {
       });
 
       action().then(() => {
+        // 2 licensing updates + 1 display-data-update
         assert.equal(messaging.broadcastMessage.callCount, 8);
 
-        messaging.broadcastMessage.calls.slice(6).forEach(call => {
+        messaging.broadcastMessage.calls.slice(5).forEach(call => {
           const event = call.args[0];
 
           assert.equal(event.from, "licensing");
@@ -296,6 +224,10 @@ describe("Licensing - Integration", () => {
             case 'storage-licensing-update':
               assert(event.isAuthorized);
               assert.equal(event.userFriendlyStatus, 'Rise Storage authorized');
+              break;
+
+            case 'display-data-update':
+              assert.deepEqual(event.displayData, JSON.parse(mockDisplay));
               break;
 
             default: assert.fail();
