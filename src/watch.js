@@ -16,37 +16,16 @@ const rppProductCode = licensing.RISE_PLAYER_PROFESSIONAL_PRODUCT_CODE;
 const displayConfigBucket = "risevision-display-notifications";
 
 // So we ensure it will only be sent once.
-let contentWatchMessageAlreadySent = false;
 let authorizationWatchMessageAlreadySent = false;
 let displayWatchMessageAlreadySent = false;
 
 function clearMessagesAlreadySentFlag() {
-  contentWatchMessageAlreadySent = false;
   authorizationWatchMessageAlreadySent = false;
   displayWatchMessageAlreadySent = false;
 }
 
 function sendWatchMessages(message) {
-  return Promise.all([sendContentWatch(message), sendRppLicenseWatch(message), sendDisplayWatch(message)]);
-}
-
-function sendContentWatch(message) {
-  if (!contentWatchMessageAlreadySent && !config.getCompanyId()) {
-    logger.debug(JSON.stringify(message));
-
-    const clients = message.clients;
-
-    if (clients.includes("local-storage")) {
-      return module.exports.sendWatchMessageFor('content.json')
-      .then(() => contentWatchMessageAlreadySent = true)
-      .catch(error =>
-        logger.file(error.stack, 'Error while sending content watch message')
-      )
-    }
-  }
-
-  return Promise.resolve();
-
+  return Promise.all([sendRppLicenseWatch(message), sendDisplayWatch(message)]);
 }
 
 function sendRppLicenseWatch(message) {

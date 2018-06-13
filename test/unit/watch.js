@@ -161,12 +161,12 @@ describe("Watch - Unit", () => {
       clients: ["logging", "system-metrics", "local-storage"]
     })
     .then(() => {
-      // so WATCH messages should have been sent for authorization, content.json and display files
+      // so WATCH messages should have been sent for authorization and display.json
       assert(messaging.broadcastMessage.called);
-      assert.equal(messaging.broadcastMessage.callCount, 3);
+      assert.equal(messaging.broadcastMessage.callCount, 2);
 
       const pathRegex =
-        new RegExp('^risevision-display-notifications/DIS123/(display|content|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$')
+        new RegExp('^risevision-display-notifications/DIS123/(display|authorization/c4b368be86245bf9501baaa6e0b00df9719869fd).json$')
 
       messaging.broadcastMessage.calls.forEach(call => {
         const event = call.args[0];
