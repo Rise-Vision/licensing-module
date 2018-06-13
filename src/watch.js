@@ -7,7 +7,7 @@ const platform = require("rise-common-electron").platform;
 const config = require("./config");
 const iterations = require("./iterations");
 const logger = require("./logger");
-const persistence = require("./persistence");
+// const persistence = require("./persistence");
 const subscriptions = require("./subscriptions");
 const display = require("./display");
 
@@ -74,18 +74,6 @@ function sendWatchMessageFor(path) {
   );
 }
 
-function loadCompanyIdFromContent(json, data, schedule) {
-  // Note that if the display doesn't have a schedule assigned, licensing data won't be avaiable.
-  if (json.content && json.content.schedule && json.content.schedule.companyId) {
-    const companyId = json.content.schedule.companyId;
-
-    return iterations.configureAndStartIfCompanyIdIsAvailable(companyId, null, schedule)
-    .then(() => persistence.save(subscriptions.getSubscriptionData()));
-  }
-
-  return logger.warning(`Company id could not be retrieved from content: ${data}`);
-}
-
 function loadCompanyIdFromDisplayData(json, data, schedule) {
   if (json.companyId) {
     const companyId = json.companyId;
@@ -137,11 +125,6 @@ function receiveJsonFile(message, label, action) {
 function handleFileUpdate(message, schedule = setInterval) {
   if (!message.filePath || !message.filePath.startsWith(displayConfigBucket)) {
     return;
-  }
-
-  if (message.filePath.endsWith("/content.json")) {
-    return receiveJsonFile(message, 'content', (json, data) =>
-      loadCompanyIdFromContent(json, data, schedule));
   }
 
   if (message.filePath.endsWith(`/${rppProductCode}.json`)) {
