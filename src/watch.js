@@ -99,6 +99,7 @@ function loadRppAuthorization(json, data) {
 
 function receiveJsonFile(message, label, action) {
   if (["DELETED", "NOEXIST"].includes(message.status)) {
+    logger.error(`${label} file not found`);
     return;
   }
 
