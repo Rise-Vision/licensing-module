@@ -77,8 +77,12 @@ function loadCompanyIdFromDisplayData(json, data, schedule) {
   if (json.companyId) {
     const companyId = json.companyId;
 
-    return iterations.configureAndStartIfCompanyIdIsAvailable(companyId, null, schedule)
-    .then(() => display.saveDisplayData(json));
+    return display.saveDisplayData(json)
+    .then(() => {
+      logger.file(`Setting company id as ${companyId}`);
+      config.setCompanyId(companyId);
+    })
+    .then(() => iterations.ensureLicensingLoopIsRunning(schedule));
   }
 
   return logger.error(`Company id could not be retrieved from display data: ${data}`);

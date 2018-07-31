@@ -130,8 +130,8 @@ describe("Licensing - Integration", () => {
     licensing.run((action, interval) => {
       assert.equal(interval, ONE_DAY);
 
-      // 3 licensing updates plus display and RPP licensing watch
-      assert.equal(messaging.broadcastMessage.callCount, 5);
+      // 4 licensing updates plus display and RPP licensing watch
+      assert.equal(messaging.broadcastMessage.callCount, 6);
 
       messaging.broadcastMessage.calls.forEach(call => {
         const event = call.args[0];
@@ -169,6 +169,9 @@ describe("Licensing - Integration", () => {
             assert.ok(wathPathRegex.test(event.filePath), "watch file path");
 
             break;
+          case "display-data-update":
+            assert.deepEqual(event.displayData, JSON.parse(mockDisplay));
+            break;
 
           default: assert.fail();
         }
@@ -201,7 +204,7 @@ describe("Licensing - Integration", () => {
         // 2 licensing updates + 1 display-data-update
         assert.equal(messaging.broadcastMessage.callCount, 8);
 
-        messaging.broadcastMessage.calls.slice(5).forEach(call => {
+        messaging.broadcastMessage.calls.slice(6).forEach(call => {
           const event = call.args[0];
 
           assert.equal(event.from, "licensing");
