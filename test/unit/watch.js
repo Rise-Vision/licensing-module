@@ -147,7 +147,6 @@ describe("Watch - Unit", () => {
     })
     .then(() => {
       assert.ok(display.saveDisplayData.called);
-      assert.ok(iterations.ensureLicensingLoopIsRunning.called);
     });
   });
 

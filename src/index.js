@@ -42,8 +42,9 @@ function run(schedule = setInterval) {
     const {companyId, licensing} = data;
 
     messaging.receiveMessages(config.moduleName).then(receiver =>
-      iterations.configureAndStartIfCompanyIdIsAvailable(companyId, licensing, schedule)
+      iterations.loadAndBroadcastInitialData(companyId, licensing)
       .then(() => configureMessagingHandlers(receiver, schedule))
+      .then(() => companyId && iterations.ensureLicensingLoopIsRunning(schedule))
       .catch(error =>
         logger.file(error.stack, 'Unexpected error while configuring messaging handlers')
       )

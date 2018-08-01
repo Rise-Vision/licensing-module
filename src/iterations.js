@@ -27,22 +27,19 @@ function ensureLicensingLoopIsRunning(schedule = setInterval) {
   return Promise.resolve();
 }
 
-function configureAndStartIfCompanyIdIsAvailable(companyId, initialLicensingData, schedule) {
+function loadAndBroadcastInitialData(companyId, initialLicensingData) {
   if (companyId) {
     logger.file(`Setting company id as ${companyId}`);
     config.setCompanyId(companyId);
   }
 
-  return Promise.resolve().then(() => {
-    if (initialLicensingData && Object.keys(initialLicensingData).length > 0) {
-      subscriptions.init(initialLicensingData);
+  if (initialLicensingData && Object.keys(initialLicensingData).length > 0) {
+    subscriptions.init(initialLicensingData);
 
-      return subscriptions.broadcastSubscriptionData();
-    }
-  })
-  .then(() =>
-    companyId && module.exports.ensureLicensingLoopIsRunning(schedule)
-  );
+    return subscriptions.broadcastSubscriptionData();
+  }
+
+  return Promise.resolve();
 }
 
 function programLicensingDataUpdate(schedule, interval) {
@@ -92,4 +89,4 @@ function stop() {
   }
 }
 
-module.exports = {configureAndStartIfCompanyIdIsAvailable, ensureLicensingLoopIsRunning, stop};
+module.exports = {loadAndBroadcastInitialData, ensureLicensingLoopIsRunning, stop};
