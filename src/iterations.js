@@ -14,10 +14,15 @@ const EACH_DAY = 24 * EACH_HOUR;
 let timerId = null;
 let retryCounts = 0;
 
+function addRandomMinutes(number) {
+  const variance = Math.floor(Math.random() * 30 * MINUTES);
+  return number + variance;
+}
+
 function ensureLicensingLoopIsRunning(schedule = setInterval) {
   if (!timerId) {
     return subscriptions.loadSubscriptionApiDataAndBroadcast()
-    .then(() => programLicensingDataUpdate(schedule, EACH_DAY))
+    .then(() => programLicensingDataUpdate(schedule, addRandomMinutes(EACH_DAY)))
     .catch(error =>
       logger.logSubscriptionAPICallError(error, true)
       .then(() => programLicensingDataLoadingRetries(schedule))
@@ -57,7 +62,7 @@ function programLicensingDataLoadingRetries(schedule) {
       // stop and reprogram every hour
       stop();
 
-      timerId = schedule(() => retryLicensingDataLoad(schedule), EACH_HOUR);
+      timerId = schedule(() => retryLicensingDataLoad(schedule), addRandomMinutes(EACH_HOUR));
     } else {
       return retryLicensingDataLoad(schedule);
     }
@@ -70,7 +75,7 @@ function retryLicensingDataLoad(schedule) {
     logger.all('api_call_successful_retry');
 
     // switch to normal reporting
-    programLicensingDataUpdate(schedule, EACH_DAY)
+    programLicensingDataUpdate(schedule, addRandomMinutes(EACH_DAY))
   })
   .catch(error => {
     retryCounts += 1;
