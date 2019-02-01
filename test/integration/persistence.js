@@ -14,6 +14,11 @@ const subscriptions = require("../../src/subscriptions");
 const watch = require("../../src/watch");
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
+const HALF_HOUR = 30 * 60000;
+
+function inRandomVarianceRange(test, low) {
+  return test >= low && test <= low + HALF_HOUR;
+}
 
 const content = `
   {
@@ -93,7 +98,7 @@ describe("Persistence - Integration", ()=>
     simple.mock(messaging, "receiveMessages").resolveWith(new Receiver());
 
     licensing.run((action, interval) => {
-      assert.equal(interval, ONE_DAY);
+      assert.equal(inRandomVarianceRange(interval, ONE_DAY), true);
 
       assert.equal(messaging.broadcastMessage.callCount, 5);
 

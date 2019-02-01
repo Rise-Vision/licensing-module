@@ -11,6 +11,11 @@ const subscriptions = require("../../src/subscriptions");
 const FIVE_MINUTES = 5 * 60 * 1000;
 const ONE_HOUR = 60 * 60 * 1000;
 const ONE_DAY = 24 * 60 * 60 * 1000;
+const HALF_HOUR = 30 * 60000;
+
+function inRandomVarianceRange(test, low) {
+  return test >= low && test <= low + HALF_HOUR;
+}
 
 describe("Iterations - Unit", ()=>
 {
@@ -35,7 +40,7 @@ describe("Iterations - Unit", ()=>
     simple.mock(subscriptions, "loadSubscriptionApiDataAndBroadcast").resolveWith();
 
     iterations.ensureLicensingLoopIsRunning((action, interval) => {
-      assert.equal(interval, ONE_DAY);
+      assert.equal(inRandomVarianceRange(interval, ONE_DAY), true);
       assert(subscriptions.loadSubscriptionApiDataAndBroadcast.callCount, 1);
 
       action()
@@ -78,7 +83,7 @@ describe("Iterations - Unit", ()=>
 
         action();
       } else {
-        assert.equal(interval, ONE_DAY);
+        assert.equal(inRandomVarianceRange(interval, ONE_DAY), true);
         assert(subscriptions.loadSubscriptionApiDataAndBroadcast.callCount, 2);
 
         // error did not repeat
@@ -125,7 +130,7 @@ describe("Iterations - Unit", ()=>
       } else if (state === 1) {
         state = 2;
 
-        assert.equal(interval, ONE_HOUR);
+        assert.equal(inRandomVarianceRange(interval, ONE_HOUR), true);
         assert(subscriptions.loadSubscriptionApiDataAndBroadcast.callCount, 12);
         assert.equal(logger.all.called, false);
 
@@ -142,7 +147,7 @@ describe("Iterations - Unit", ()=>
         .reduce(promise => promise.then(action), Promise.resolve());
       } else {
         // it finally answered !
-        assert.equal(interval, ONE_DAY);
+        assert.equal(inRandomVarianceRange(interval, ONE_DAY), true);
         assert(subscriptions.loadSubscriptionApiDataAndBroadcast.callCount, 25);
 
         assert.equal(logger.logSubscriptionAPICallError.callCount, 25);
