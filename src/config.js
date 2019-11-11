@@ -8,6 +8,7 @@ const moduleName = "licensing";
 
 const CACHE_FILE_NAME = "licensing-cache.json";
 const SUBSCRIPTION_API_SERVER = 'store-dot-rvaserver2.appspot.com';
+const SUBSCRIPTION_API_SERVER_STAGE = 'store-dot-rvacore-test.appspot.com';
 
 const PRODUCT_CODES_BY_COMPANY = [
   licensing.RISE_STORAGE_PRODUCT_CODE,
@@ -20,7 +21,9 @@ function getSubscriptionStatusApiUrl() {
     throw Error("Company ID not set");
   }
 
-  return `https://${SUBSCRIPTION_API_SERVER}/v1/company/${companyId}/product/status?pc=${
+  const host = common.isStageEnvironment() ? SUBSCRIPTION_API_SERVER_STAGE : SUBSCRIPTION_API_SERVER;
+
+  return `https://${host}/v1/company/${companyId}/product/status?pc=${
     PRODUCT_CODES_BY_COMPANY
   }`;
 }
