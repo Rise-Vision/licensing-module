@@ -24,6 +24,17 @@ describe("Config - Unit", () => {
     assert.equal(url, 'https://store-dot-rvaserver2.appspot.com/v1/company/123/product/status?pc=b0cba08a4baa0c62b8cdc621b6f6a124f89a03db');
   });
 
+
+  it("Build Stage Subscription API URL", () => {
+    simple.mock(common, "isStageEnvironment").returnWith(true);
+
+    config.setCompanyId('123');
+
+    const url = config.getSubscriptionStatusApiUrl();
+
+    assert.equal(url, 'https://store-dot-rvacore-test.appspot.com/v1/company/123/product/status?pc=b0cba08a4baa0c62b8cdc621b6f6a124f89a03db');
+  });
+
   it("Build cache path", () => {
     const path = config.getCachePath();
 
